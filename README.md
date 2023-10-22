@@ -75,7 +75,7 @@ The 'classic' way of implementing 'self-hosted' stripe checkout is by using prev
 {/if}
 ```
 
-In the example above, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
+In the example above, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com)) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
 
 NOTE: For payment setup rather than checkout, replace the line
 
