@@ -43,7 +43,7 @@ A functioning Stripe integration can be achieved with very little code.
 
 The address element and payment element are Stripe-hosted forms, so any content entered will not be submitted to our server with the form.  The payment and address element allow you to embed the forms on your own page, but all the processing still happens on Stripe servers.  
 
-The 'classic' way of implementing 'self-hosted' stripe checkout is by using preventDefault to intercept the form submission and send it to Stripe instead.
+The 'classic' way of implementing 'self-hosted' stripe checkout is by using preventDefault to intercept the form submission so that we can get info from Stripe on the processing of the embeeded form elements.
 
 `+page.svelte`
 
