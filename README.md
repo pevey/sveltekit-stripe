@@ -37,7 +37,7 @@ PUBLIC_STRIPE_TABLE_ID=prctbl_1234567890...
 
 After integrating Stripe with SvelteKit for the umpteenth time, I created this to significantly reduce the boilerplate I was writing over and over again.
 
-A functioning Stripe integration can be achieved with very little code:
+A functioning Stripe integration can be achieved with very little code.
 
 ### Example: Using on:submit|preventDefault
 
@@ -65,9 +65,9 @@ The 'classic' way of implementing 'self-hosted' stripe checkout is by using prev
 
 {#if success === true}
    <h1>Success!</h1>
-   {:else if !clientSecret}
+{:else if !clientSecret}
    <h1>Something went wrong</h1>
-   {:else}
+{:else}
    <form class:hidden={success} on:submit|preventDefault={handleSubmit}>
       <Payment publicKey={PUBLIC_STRIPE_KEY} {clientSecret} />
       <button type="submit">Place Your Order</button>
@@ -75,7 +75,7 @@ The 'classic' way of implementing 'self-hosted' stripe checkout is by using prev
 {/if}
 ```
 
-In the example above, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io/)) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
+In the example above, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
 
 NOTE: For payment setup rather than checkout, replace the line
 
