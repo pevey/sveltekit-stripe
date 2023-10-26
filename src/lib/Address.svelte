@@ -69,7 +69,7 @@
          addressContainer.mount(node)
          addressContainer.on('change', (e: any) => { 
             dispatch('change', e)
-            if (e.complete) dispatch('complete', e.value.address)
+            if (e.complete) dispatch('complete', e.value)
          })
          addressContainer.on('ready', (e: any) => dispatch('ready', e))
          addressContainer.on('focus', (e: any) => dispatch('focus', e))

@@ -1,5 +1,10 @@
 # Change Log
 
+## 2.1.0
+
+- Upgrade package dependencies
+- Custom on:complete now returns the name and address object instead of just the address object.
+
 ## 2.0.5
 
 - Update README

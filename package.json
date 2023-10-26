@@ -1,6 +1,6 @@
 {
    "name": "sveltekit-stripe",
-   "version": "2.0.5",
+   "version": "2.1.0",
    "description": "A barebones SvelteKit implementation for concisely rendering Stripe Elements. Gets the job done with as little complexity as possible.",
    "repository": {
       "type": "git",
@@ -10,28 +10,28 @@
    "author": "Lacey Pevey",
    "license": "MIT",
    "keywords": [
-     "svelte",
-     "sveltekit",
-     "stripe",
-     "payment",
-     "payments",
-     "address",
-     "elements",
-     "pricing table",
-     "checkout",
-     "subscriptions",
-     "ecommerce"
+      "svelte",
+      "sveltekit",
+      "stripe",
+      "payment",
+      "payments",
+      "address",
+      "elements",
+      "pricing table",
+      "checkout",
+      "subscriptions",
+      "ecommerce"
    ],
-	"scripts": {
-		"dev": "vite dev",
-		"build": "shx rm -rf ./dist && vite build && npm run package",
-		"preview": "vite preview",
-		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "npm run package",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest"
-	},
+   "scripts": {
+      "dev": "vite dev",
+      "build": "shx rm -rf ./dist && vite build && npm run package",
+      "preview": "vite preview",
+      "package": "svelte-kit sync && svelte-package && publint",
+      "prepublishOnly": "npm run package",
+      "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+      "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+      "test": "vitest"
+   },
    "exports": {
       ".": {
          "types": "./dist/index.d.ts",
@@ -49,32 +49,32 @@
          "types": "./dist/stores.d.ts",
          "svelte": "./dist/stores.js"
       }
-	},
-	"files": [
-		"dist",
-		"!dist/**/*.test.*",
-		"!dist/**/*.spec.*"
-	],
-	"peerDependencies": {
-		"svelte": "^4.0.0"
-	},
-	"devDependencies": {
-		"@sveltejs/adapter-auto": "^2.0.0",
-		"@sveltejs/kit": "^1.25.2",
-		"@sveltejs/package": "^2.2.2",
-		"publint": "^0.2.4",
-		"shx": "^0.3.4",
-		"svelte": "^4.2.1",
-		"svelte-check": "^3.5.2",
-		"tslib": "^2.6.2",
-		"typescript": "^5.2.2",
-		"vite": "^4.4.11",
-		"vitest": "^0.34.6"
-	},
-	"dependencies": {
-		"@stripe/stripe-js": "^1.52.1"
-	},
-	"svelte": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"type": "module"
+   },
+   "files": [
+      "dist",
+      "!dist/**/*.test.*",
+      "!dist/**/*.spec.*"
+   ],
+   "peerDependencies": {
+      "svelte": "^4.0.0"
+   },
+   "devDependencies": {
+      "@sveltejs/adapter-auto": "^2.0.0",
+      "@sveltejs/kit": "^1.27.1",
+      "@sveltejs/package": "^2.2.2",
+      "publint": "^0.2.5",
+      "shx": "^0.3.4",
+      "svelte": "^4.2.2",
+      "svelte-check": "^3.5.2",
+      "tslib": "^2.6.2",
+      "typescript": "^5.2.2",
+      "vite": "^4.5.0",
+      "vitest": "^0.34.6"
+   },
+   "dependencies": {
+      "@stripe/stripe-js": "^2.1.10"
+   },
+   "svelte": "./dist/index.js",
+   "types": "./dist/index.d.ts",
+   "type": "module"
 }
