@@ -1,19 +1,19 @@
 <script lang="ts">
-   import type { Appearance, Stripe, StripeElementsOptions } from '@stripe/stripe-js'
+	import type { Appearance, Stripe, StripeElementsOptions } from '@stripe/stripe-js'
 	import { loadStripe } from '@stripe/stripe-js'
-   import { onMount } from 'svelte'
-   import { dev, browser } from '$app/environment'
-   import { stripeClient, stripeElements } from '$lib/stores'
+	import { onMount } from 'svelte'
+	import { dev, browser } from '$app/environment'
+	import { stripeClient, stripeElements } from '$lib/stores'
 
-   export let publicKey: string
-   export let elementsOptions: StripeElementsOptions|undefined = undefined
+	export let publicKey: string
+	export let elementsOptions: StripeElementsOptions|undefined = undefined
 
-   let mounted = false
+	let mounted = false
 
-   // @ts-ignore
-   onMount(async () => {		
-      if (!publicKey) return false
-   
+	// @ts-ignore
+	onMount(async () => {		
+		if (!publicKey) return false
+	
 		if (browser) {
 			if (!$stripeClient) {
 				try {
@@ -26,13 +26,13 @@
 					if (dev) console.error(e)
 				}
 			}
-      }
-      
-      mounted = true
-      return () => {
-         mounted = false
-      }
-   })
+		}
+		
+		mounted = true
+		return () => {
+			mounted = false
+		}
+	})
 </script>
 
 {#if mounted}

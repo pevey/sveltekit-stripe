@@ -1,64 +1,64 @@
 <script lang="ts">
-   import type { StripeElements, StripeAddressElement, StripeAddressElementOptions } from '@stripe/stripe-js'
-   import { onMount, createEventDispatcher } from 'svelte'
-   import { dev } from '$app/environment'
+	import type { StripeElements, StripeAddressElement, StripeAddressElementOptions } from '@stripe/stripe-js'
+	import { onMount, createEventDispatcher } from 'svelte'
+	import { dev } from '$app/environment'
 	import { stripeElements } from '$lib/stores'
 
-   export let addressElementOptions: StripeAddressElementOptions|undefined = undefined
-   export let addressContainer: StripeAddressElement|undefined = undefined
+	export let addressElementOptions: StripeAddressElementOptions|undefined = undefined
+	export let addressContainer: StripeAddressElement|undefined = undefined
 	
-   const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher()
 
-   // see all options available at
-   // https://stripe.com/docs/js/elements_object/create_address_element
-   if (!addressElementOptions) addressElementOptions = { mode: 'shipping' }
-   addressElementOptions.mode = addressElementOptions.mode || 'shipping'
-   addressElementOptions.autocomplete = addressElementOptions.autocomplete || { mode: 'automatic' }
-   addressElementOptions.allowedCountries = addressElementOptions.allowedCountries || ['US']
-   addressElementOptions.blockPoBox = addressElementOptions.blockPoBox || false
-   addressElementOptions.contacts = addressElementOptions.contacts || []
-   addressElementOptions.defaultValues = addressElementOptions.defaultValues || {}
-   addressElementOptions.fields = addressElementOptions.fields || { phone: 'always' }
-   addressElementOptions.validation = addressElementOptions.validation || { phone: { required: 'never' } }
-   addressElementOptions.display = addressElementOptions.display || { name: 'split' }
+	// see all options available at
+	// https://stripe.com/docs/js/elements_object/create_address_element
+	if (!addressElementOptions) addressElementOptions = { mode: 'shipping' }
+	addressElementOptions.mode = addressElementOptions.mode || 'shipping'
+	addressElementOptions.autocomplete = addressElementOptions.autocomplete || { mode: 'automatic' }
+	addressElementOptions.allowedCountries = addressElementOptions.allowedCountries || ['US']
+	addressElementOptions.blockPoBox = addressElementOptions.blockPoBox || false
+	addressElementOptions.contacts = addressElementOptions.contacts || []
+	addressElementOptions.defaultValues = addressElementOptions.defaultValues || {}
+	addressElementOptions.fields = addressElementOptions.fields || { phone: 'always' }
+	addressElementOptions.validation = addressElementOptions.validation || { phone: { required: 'never' } }
+	addressElementOptions.display = addressElementOptions.display || { name: 'split' }
 
-   let mounted = false
+	let mounted = false
 
-   onMount(() => {         
+	onMount(() => {         
 		if (dev) {
 			if (!$stripeElements) console.warn("DEBUG: elements is undefined.  The Address Element must be placed inside a StripeElements component.")
 		}
 		mounted = true
-      return () => {
-         mounted = false
-      }
-   })
-   
-   const addressElement = (node: any) => {
-      try {
+		return () => {
+			mounted = false
+		}
+	})
+	
+	const addressElement = (node: any) => {
+		try {
 			// @ts-ignore
-         addressContainer = $stripeElements?.create('address', addressElementOptions)
-         addressContainer?.mount(node)
-         addressContainer?.on('change', (e: any) => { 
-            dispatch('change', e)
-            if (e.complete) dispatch('complete', e.value)
-         })
-         addressContainer?.on('ready', (e: any) => dispatch('ready', e))
-         addressContainer?.on('focus', (e: any) => dispatch('focus', e))
-         addressContainer?.on('blur', (e: any) => dispatch('blur', e))
-      } catch (e) {
-         if (dev) console.error(e)
-      }
-      return {
-         destroy: () => {
-            if (addressContainer) addressContainer.destroy()
-            // stripeClient.set(null)
+			addressContainer = $stripeElements?.create('address', addressElementOptions)
+			addressContainer?.mount(node)
+			addressContainer?.on('change', (e: any) => { 
+				dispatch('change', e)
+				if (e.complete) dispatch('complete', e.value)
+			})
+			addressContainer?.on('ready', (e: any) => dispatch('ready', e))
+			addressContainer?.on('focus', (e: any) => dispatch('focus', e))
+			addressContainer?.on('blur', (e: any) => dispatch('blur', e))
+		} catch (e) {
+			if (dev) console.error(e)
+		}
+		return {
+			destroy: () => {
+				if (addressContainer) addressContainer.destroy()
+				// stripeClient.set(null)
 				stripeElements.set(undefined)
-         }
-      }
-   }
+			}
+		}
+	}
 </script>
 
 {#if mounted}
-   <div use:addressElement />
+	<div use:addressElement />
 {/if}

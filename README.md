@@ -55,19 +55,19 @@ The return_url below will be called after Stripe has processed the payment.  The
 
 ```svelte
 <script>
-   import { Elements, PaymentElement, type StripePaymentElementOptions } from 'sveltekit-stripe'
-   import { PUBLIC_STRIPE_KEY } from '$env/static/public'
-   import { enhance } from '$app/forms'
-   let clientSecret = 'pi_1234567890...' // from your server, see README
-   let success = false
+	import { Elements, PaymentElement, type StripePaymentElementOptions } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	import { enhance } from '$app/forms'
+	let clientSecret = 'pi_1234567890...' // from your server, see README
+	let success = false
 
 	const elementsOptions: StripePaymentElementOptions = {
 		appearance: { 
 			theme: 'stripe',
 		},
 		mode: 'payment',
-		currency: data.defaultCurrency.toLowerCase(),
-		amount: $order.total
+		currency: 'usd',
+		amount: 1000
 	}
 </script>
 
@@ -104,11 +104,11 @@ The return_url below will be called after Stripe has processed the payment.  The
 
 ```js
 export const actions = {
-   default: async({ request }) => {
-      // handle the form submission
-      // save to databse, queue email notification, etc
-      return { success: true }
-   }
+	default: async({ request }) => {
+		// handle the form submission
+		// save to databse, queue email notification, etc
+		return { success: true }
+	}
 }
 ```
 
@@ -119,30 +119,30 @@ One way to use the Address component is to bind the container.  Once we have a b
 `+page.svelte`
 ```svelte
 <script>
-   import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
-   import { PUBLIC_STRIPE_KEY } from '$env/static/public'
-   import { enhance } from '$app/forms'
-   let clientSecret = 'pi_1234567890...' // from your server, see README
-   let addressContainer
+	import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	import { enhance } from '$app/forms'
+	let clientSecret = 'pi_1234567890...' // from your server, see README
+	let addressContainer
 </script>
 
 <Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
-   <form method="POST" use:enhance={ async ({ cancel }) => {
-      const {complete, value} = await addressContainer.getValue()
-      if (complete) {
-         // save the address somewhere
-         console.log(value)
-      } //else {
-         // You can choose to handle the error yourself (e.g., show an error message)
-         // Or you can just continue the submission and Stripe will handle the error
-      //}
-      
+	<form method="POST" use:enhance={ async ({ cancel }) => {
+		const {complete, value} = await addressContainer.getValue()
+		if (complete) {
+			// save the address somewhere
+			console.log(value)
+		} //else {
+			// You can choose to handle the error yourself (e.g., show an error message)
+			// Or you can just continue the submission and Stripe will handle the error
+		//}
+		
 		// ...submit to Stripe as in example above
-   }}>
-      <AddressElement {addressElementOptions} bind:addressContainer />
-      <PaymentElement />
-      <button type="submit">Place Your Order</button>
-   </form>
+	}}>
+		<AddressElement {addressElementOptions} bind:addressContainer />
+		<PaymentElement />
+		<button type="submit">Place Your Order</button>
+	</form>
 </Elements>
 ```
 
@@ -152,11 +152,11 @@ One downside of the above is that it only gets the value when the entire form is
 
 ```svelte
 <Address publicKey={data.stripeKey} {clientSecret}
-   on:complete={async (e) => {
-      console.log(e.detail)
-      // we have an address we can do something with
-      // for instance, get shipping/payment options
-   }}
+	on:complete={async (e) => {
+		console.log(e.detail)
+		// we have an address we can do something with
+		// for instance, get shipping/payment options
+	}}
 />
 ```
 
@@ -174,10 +174,10 @@ One way to pass a client secret to the client in SvelteKit is via the load funct
 
 ```js
 export const load = async () => {
-   const clientSecret = await generateClientSecret() // example function 
-   return {
-      clientSecret
-   }
+	const clientSecret = await generateClientSecret() // example function 
+	return {
+		clientSecret
+	}
 }
 ```
 
@@ -187,10 +187,10 @@ Please note that `generateClientSecret()` is not a real function.  It is a place
 
 ```svelte
 <script>
-   ...
-   export let data
-   let clientSecret = data?.clientSecret
-   ...
+	...
+	export let data
+	let clientSecret = data?.clientSecret
+	...
 </script>
 ```
 
@@ -204,10 +204,10 @@ Another way to obtain a client secret is to use an endpoint.  A simplified examp
 import { json } from '@sveltejs/kit'
 
 export async function POST({ request }) {
-   const data = await request.json()
-   // some sort of validation on data
-   const clientSecret = await generateClientSecret() // example function 
-   return json({clientSecret})
+	const data = await request.json()
+	// some sort of validation on data
+	const clientSecret = await generateClientSecret() // example function 
+	return json({clientSecret})
 }
 ```
 
@@ -218,11 +218,11 @@ You can load the clientSecret from the server endpoint when the page loads like 
 `+page.svelte`
 ```js
 {#if !clientSecret}
-   let clientSecret = await fetch('/api/stripe', { 
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({some:data}) 
-   }).then(res => res.json())
+	let clientSecret = await fetch('/api/stripe', { 
+		method: 'POST',
+		headers: {'Content-Type': 'application/json'},
+		body: JSON.stringify({some:data}) 
+	}).then(res => res.json())
 {:else}
 // rest of page
 ```
@@ -232,15 +232,15 @@ Or, you can take advantage of the relatively new ability in Stripe to produce Pa
 `+page.svelte`
 ```svelte
 <script>
-   import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
-   import { PUBLIC_STRIPE_KEY } from '$env/static/public'
-   import { enhance } from '$app/forms'
-   let clientSecret = 'pi_1234567890...' // from your server, see README
-   let addressContainer
+	import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	import { enhance } from '$app/forms'
+	let clientSecret = 'pi_1234567890...' // from your server, see README
+	let addressContainer
 </script>
 
 <Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
-   <form method="POST" use:enhance={ async ({ cancel }) => {
+	<form method="POST" use:enhance={ async ({ cancel }) => {
 		let stripeResponse = await elements?.submit()
 		// get the client secret here before final submission of payment
 		const { clientSecret } = await fetch('/checkout/turnstile', { 
@@ -265,13 +265,13 @@ Or, you can take advantage of the relatively new ability in Stripe to produce Pa
 			errorMessage = stripeResponse?.error?.message
 			processing = false
 		}
-   }}>
-      <AddressElement on:complete={ async (e) => {
+	}}>
+		<AddressElement on:complete={ async (e) => {
 			console.log(e.detail.firstName, e.detail.lastName, e.detail.address)
 		}}/>
-      <PaymentElement />
-      <button type="submit">Place Your Order</button>
-   </form>
+		<PaymentElement />
+		<button type="submit">Place Your Order</button>
+	</form>
 </Elements>
 ```
 
@@ -291,11 +291,11 @@ import { SECRET_TURNSTILE_KEY } from '$env/static/private'
 import { error, json } from '@sveltejs/kit'
 
 export async function POST({ request }) {
-   const data = await request.json()
-   if (!await validateToken(data.token, SECRET_TURNSTILE_KEY)) throw error(400, { message: 'Bot risk' })
-   // some sort of validation on data
-   const clientSecret = await generateClientSecret() // example function 
-   return json(clientSecret)
+	const data = await request.json()
+	if (!await validateToken(data.token, SECRET_TURNSTILE_KEY)) throw error(400, { message: 'Bot risk' })
+	// some sort of validation on data
+	const clientSecret = await generateClientSecret() // example function 
+	return json(clientSecret)
 }
 ```
 
@@ -303,18 +303,18 @@ export async function POST({ request }) {
 
 ```svelte
 <script>
-   ...
-   import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public'
-   import { Turnstile } from 'sveltekit-turnstile'
+	...
+	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public'
+	import { Turnstile } from 'sveltekit-turnstile'
 
 	let token: string
-   ...
+	...
 </script>
 ...
 {#if !token}
-   <Turnstile siteKey={PUBLIC_TURNSTILE_SITE_KEY} on:turnstile-callback={ async (e) => { 
-      token = e.detail.token
-   }} />
+	<Turnstile siteKey={PUBLIC_TURNSTILE_SITE_KEY} on:turnstile-callback={ async (e) => { 
+		token = e.detail.token
+	}} />
 {:else}
 ...
 ```
@@ -344,21 +344,21 @@ import { Stripe } from 'stripe'
 import { SECRET_STRIPE_KEY } from '$env/static/private'
 
 export const load = async () => {
-   const stripe = new Stripe(SECRET_STRIPE_KEY)
+	const stripe = new Stripe(SECRET_STRIPE_KEY)
 
-   const options = {
-      price: 1000, // price in smallest units (eg pennies), REQUIRED
-      currency: 'USD', // currency code, REQUIRED
-      //customer: locals.user.stripeCustomerId, required for setup intent
-      //setup_future_usage: 'on_session', 
-      //automatic_payment_methods: { enabled: true }
-   }
+	const options = {
+		price: 1000, // price in smallest units (eg pennies), REQUIRED
+		currency: 'USD', // currency code, REQUIRED
+		//customer: locals.user.stripeCustomerId, required for setup intent
+		//setup_future_usage: 'on_session', 
+		//automatic_payment_methods: { enabled: true }
+	}
 
-   const paymentIntent = await stripe.paymentIntents.create(options)
+	const paymentIntent = await stripe.paymentIntents.create(options)
 
-   return { 
-      clientSecret: paymentIntent.client_secret
-   }
+	return { 
+		clientSecret: paymentIntent.client_secret
+	}
 }
 ```
 
@@ -378,16 +378,16 @@ export default new Stripe(SECRET_STRIPE_KEY)
 import stripe from '$lib/server/stripe'
 
 export const load = async () => {
-   const options = {
-      price: 1000, 
-      currency: 'USD'
-   }
+	const options = {
+		price: 1000, 
+		currency: 'USD'
+	}
 
-   const paymentIntent = await stripe.paymentIntents.create(options)
+	const paymentIntent = await stripe.paymentIntents.create(options)
 
-   return { 
-      clientSecret: paymentIntent.client_secret
-   }
+	return { 
+		clientSecret: paymentIntent.client_secret
+	}
 }
 ```
 
@@ -406,24 +406,24 @@ For details about options available, see the Stripe Documentation:
 
 ```svelte
 <script>
-   ...
-   let addressElementOptions = {
-      autocomplete: 'automatic',
-      allowedCountries: ['US', 'CA'],
-      blockPoBox: false,
-      display: { name: 'split' }
-      contacts: [{
-         name: 'Jenny Rosen',
-         address: {
-            line1: '185 Berry St.',
-            city: 'San Francisco',
-            state: 'CA',
-            postal_code: '94941',
-            country: 'US',
-         }
-      }]
-   }
-   ...
+	...
+	let addressElementOptions = {
+		autocomplete: 'automatic',
+		allowedCountries: ['US', 'CA'],
+		blockPoBox: false,
+		display: { name: 'split' }
+		contacts: [{
+			name: 'Jenny Rosen',
+			address: {
+				line1: '185 Berry St.',
+				city: 'San Francisco',
+				state: 'CA',
+				postal_code: '94941',
+				country: 'US',
+			}
+		}]
+	}
+	...
 </script>
 
 ...
@@ -440,7 +440,7 @@ If preferred, your options can be set in a separate file and imported.
 ```ts
 import type { StripeAddressElementOptions } from 'sveltekit-stripe'
 export default addressElementOptions: StripeAddressElementOptions = {
-   // options
+	// options
 }
 ```
 
