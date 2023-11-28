@@ -27,55 +27,17 @@ Add your Stripe public key to your environment variables:
 PUBLIC_STRIPE_KEY=pk_test_1234567890...
 ```
 
-If you plan to use a pricing table, you will need to create one in your Stripe dashboard.  You can add the ID to your environment variables:
-
-```bash
-PUBLIC_STRIPE_TABLE_ID=prctbl_1234567890...
-```
-
 ## Usage
 
 After integrating Stripe with SvelteKit for the umpteenth time, I created this to significantly reduce the boilerplate I was writing over and over again.
 
 A functioning Stripe integration can be achieved with very little code.
 
-### Example: Using on:submit|preventDefault
+The options objects for the Svelte components are properly typed using the underlying Stripe library types to provide type hints for syntax.  If you define your options outside of the component, you can import the Stripe types from this library instead of the underlying Stripe package.
 
-The address element and payment element are Stripe-hosted forms, so any content entered will not be submitted to our server with the form.  The payment and address element allow you to embed the forms on your own page, but all the processing still happens on Stripe servers.  
+### Example: Self-Hosted Checkout Using `use:enhance`
 
-The 'classic' way of implementing 'self-hosted' stripe checkout is by using preventDefault to intercept the form submission so that we can get info from Stripe on the processing of the embedded form elements.
-
-`+page.svelte`
-
-```svelte
-<script>
-   import { Payment, stripeClient, stripeElements } from 'sveltekit-stripe'
-   import { PUBLIC_STRIPE_KEY } from '$env/static/public'
-
-   let clientSecret = 'pi_1234567890...' // from your server, see below
-   let success = false
-
-   const handleSubmit = async function() {
-      const stripeResponse = await $stripeClient.confirmPayment({ elements: $stripeElements, redirect: 'if_required' })
-      console.log(stripeResponse)
-      success = (stripeResponse.paymentIntent.status === 'succeeded')
-      // do some other stuff
-   }
-</script>
-
-{#if success === true}
-   <h1>Success!</h1>
-{:else if !clientSecret}
-   <h1>Something went wrong</h1>
-{:else}
-   <form class:hidden={success} on:submit|preventDefault={handleSubmit}>
-      <Payment publicKey={PUBLIC_STRIPE_KEY} {clientSecret} />
-      <button type="submit">Place Your Order</button>
-   </form>
-{/if}
-```
-
-In the example above, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com)) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
+In the example below, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com)) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
 
 NOTE: For payment setup rather than checkout, replace the line
 
@@ -85,47 +47,57 @@ with
 
 `const stripeResponse = await $stripeClient.confirmSetup({ elements: $stripeElements, redirect: 'if_required' })`
 
-### Example: Self-Hosted Checkout Using `use:enhance`
+The address element and payment element are Stripe-hosted forms, so any content entered will not be submitted to our server with the form.  The payment and address element allow you to embed the forms on your own page, but all the processing still happens on Stripe servers.  We can use SvelteKit's built-in `enhance` action on the form to have control what happens when a user submits the form.  See the SvelteKit documentation on Form Actions for more detailed explanation of Form Actions and `use:enhance`.
 
-As an alternative to preventDefault, we can use SvelteKit's built-in `enhance` action on the form to have better control over what happens when a user submits.  See the SvelteKit documentation on Form Actions for more detailed explanation of Form Actions and `use:enhance`.
+The return_url below will be called after Stripe has processed the payment.  The call to the return_url will include a payload from Stripe about the status of the payment.
 
 `+page.svelte`
 
 ```svelte
 <script>
-   import { Payment, stripeClient, stripeElements } from 'sveltekit-stripe'
+   import { Elements, PaymentElement, type StripePaymentElementOptions } from 'sveltekit-stripe'
    import { PUBLIC_STRIPE_KEY } from '$env/static/public'
    import { enhance } from '$app/forms'
    let clientSecret = 'pi_1234567890...' // from your server, see README
    let success = false
+
+	const elementsOptions: StripePaymentElementOptions = {
+		appearance: { 
+			theme: 'stripe',
+		},
+		mode: 'payment',
+		currency: data.defaultCurrency.toLowerCase(),
+		amount: $order.total
+	}
 </script>
 
-{#if success === true}
-   <h1>Success!</h1>
-{:else if !clientSecret}
-   <h1>Something went wrong</h1>
-{:else}
-   <form class:hidden={success} method="POST" use:enhance={ async ({ cancel }) => {
-      const stripeResponse = await $stripeClient.confirmPayment({ elements: $stripeElements, redirect: 'if_required' })
-      console.log(stripeResponse)
-      if (stripeResponse.error) { 
-         console.log(stripeResponse.error)
-         cancel()
-      } 
-      // At this point, we have a successful payment with Stripe
-      // We still have not submitted the form to our own server
-      // The next line does that by sending it to the default form action
-      return async ({ result }) => {
-         if (result.status === 200) {
-            // our own server has saved the payment
-            success = true
-         } 
-      }
-   }}>
-      <Payment publicKey={PUBLIC_STRIPE_KEY} {clientSecret} />
-      <button type="submit">Place Your Order</button>
-   </form>
-{/if}
+<Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
+	<form method="POST" use:enhance={ async ({ cancel }) => {
+		let stripeResponse = await elements?.submit()
+		// console.log(stripeResponse)
+		if (stripeResponse && !stripeResponse.error) {
+			let stripeResponse = await stripe.confirmPayment({ 
+				elements,
+				clientSecret,
+				confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
+			})
+			// console.log(stripeResponse)
+			if (stripeResponse.error) { 
+				console.log(stripeResponse.error)
+				cancel()
+			} 
+		}
+		return async ({ result }) => {
+			// If we get here instead of being redirected to the url set above,
+			// we know that something went wrong.
+			errorMessage = stripeResponse?.error?.message
+			processing = false
+		}
+	}}>
+		<PaymentElement />
+		<button type="submit">Place Your Order</button>
+	</form>
+</Elements>
 ```
 
 `+page.server.js`
@@ -145,23 +117,17 @@ export const actions = {
 One way to use the Address component is to bind the container.  Once we have a binding, we can use the Stripe-provided function getValue():
 
 `+page.svelte`
-
 ```svelte
 <script>
-   import { Payment, Address, stripeClient, stripeElements } from 'sveltekit-stripe'
+   import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
    import { PUBLIC_STRIPE_KEY } from '$env/static/public'
    import { enhance } from '$app/forms'
    let clientSecret = 'pi_1234567890...' // from your server, see README
-   let success = false
    let addressContainer
 </script>
 
-{#if success === true}
-   <h1>Success!</h1>
-{:else if !clientSecret}
-   <h1>Something went wrong</h1>
-{:else}
-   <form class:hidden={success} method="POST" use:enhance={ async ({ cancel }) => {
+<Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
+   <form method="POST" use:enhance={ async ({ cancel }) => {
       const {complete, value} = await addressContainer.getValue()
       if (complete) {
          // save the address somewhere
@@ -170,23 +136,14 @@ One way to use the Address component is to bind the container.  Once we have a b
          // You can choose to handle the error yourself (e.g., show an error message)
          // Or you can just continue the submission and Stripe will handle the error
       //}
-      const stripeResponse = await $stripeClient.confirmPayment({ elements: $stripeElements, redirect: 'if_required' })
-      console.log(stripeResponse)
-      if (stripeResponse.error) { 
-         console.log(stripeResponse.error)
-         cancel()
-      } 
-      return async ({ result }) => {
-         if (result.status === 200) {
-            success = true
-         } 
-      }
+      
+		// ...submit to Stripe as in example above
    }}>
-      <Address publicKey={PUBLIC_STRIPE_KEY} {clientSecret} bind:addressContainer />
-      <Payment publicKey={PUBLIC_STRIPE_KEY} {clientSecret} />
+      <AddressElement {addressElementOptions} bind:addressContainer />
+      <PaymentElement />
       <button type="submit">Place Your Order</button>
    </form>
-{/if}
+</Elements>
 ```
 
 ### Example: Using the Custom on:complete Event with the Address Element
@@ -250,23 +207,72 @@ export async function POST({ request }) {
    const data = await request.json()
    // some sort of validation on data
    const clientSecret = await generateClientSecret() // example function 
-   return json(clientSecret)
+   return json({clientSecret})
 }
 ```
 
-`+page.svelte`
+NOTE: In practice, you would want to use recaptcha or turnstile on this endpoint.  See example in a section below.
 
-```svelte
-...
-{#if success === true}
-   <h1>Success!</h1>
-{:else if !clientSecret}
+You can load the clientSecret from the server endpoint when the page loads like this:
+
+`+page.svelte`
+```js
+{#if !clientSecret}
    let clientSecret = await fetch('/api/stripe', { 
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({some:data}) 
    }).then(res => res.json())
-...
+{:else}
+// rest of page
+```
+
+Or, you can take advantage of the relatively new ability in Stripe to produce Payment element without yet having a clientSecret, and then generate the client secret when the payment is submitted.  This approach of creating the intent/clientSecret at the last moment is useful if the final price might change due to shipping ot other charges, and avoids the need to use the stripe client to manually update the payment intent after it was initially created.
+
+`+page.svelte`
+```svelte
+<script>
+   import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
+   import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+   import { enhance } from '$app/forms'
+   let clientSecret = 'pi_1234567890...' // from your server, see README
+   let addressContainer
+</script>
+
+<Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
+   <form method="POST" use:enhance={ async ({ cancel }) => {
+		let stripeResponse = await elements?.submit()
+		// get the client secret here before final submission of payment
+		const { clientSecret } = await fetch('/checkout/turnstile', { 
+			method: 'POST', 
+			body: JSON.stringify({ token })
+		}).then(res => res.json()).catch(e => console.log(e))
+
+		if (stripeResponse && !stripeResponse.error) {
+			let stripeResponse = await stripe.confirmPayment({ 
+				elements,
+				clientSecret,
+				confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
+			})
+			if (stripeResponse.error) { 
+				console.log(stripeResponse.error)
+				cancel()
+			} 
+		}
+		return async ({ result }) => {
+			// If we get here instead of being redirected to the url set above,
+			// we know that something went wrong.
+			errorMessage = stripeResponse?.error?.message
+			processing = false
+		}
+   }}>
+      <AddressElement on:complete={ async (e) => {
+			console.log(e.detail.firstName, e.detail.lastName, e.detail.address)
+		}}/>
+      <PaymentElement />
+      <button type="submit">Place Your Order</button>
+   </form>
+</Elements>
 ```
 
 ### A Note About Security
@@ -300,27 +306,14 @@ export async function POST({ request }) {
    ...
    import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public'
    import { Turnstile } from 'sveltekit-turnstile'
+
+	let token: string
    ...
 </script>
 ...
-{#if success === true}
-   <h1>Success!</h1>
-{:else if !token}
+{#if !token}
    <Turnstile siteKey={PUBLIC_TURNSTILE_SITE_KEY} on:turnstile-callback={ async (e) => { 
       token = e.detail.token
-      let body = {
-         token,
-         other: data
-      }
-      try {
-         clientSecret = await fetch('/api/turnstile', { 
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(body) 
-         }).then(res => res.json())
-      } catch (err) {
-         console.log(err)
-      }
    }} />
 {:else}
 ...
@@ -434,7 +427,7 @@ For details about options available, see the Stripe Documentation:
 </script>
 
 ...
-<Address publicKey={PUBLIC_STRIPE_KEY} {clientSecret} {addressElementOptions} bind:addressContainer />
+<Address {addressElementOptions} />
 ...
 ```
 
@@ -461,17 +454,3 @@ import addressElementOptions from './addressElementOptions'
 ## Customizing the Elements
 
 The Payment and Address components support the [Appearance API](https://stripe.com/docs/elements/appearance-api).
-
-Pass an `appearance` property to customize the appearance of the elements.
-
-### Example: Customizing the Elements
-
-`+page.svelte`
-
-```svelte
-<script>
-   import type { Appearance } from 'sveltekit-stripe'
-   let appearance: Appearance = { theme: 'stripe' }
-   <AddressElement {appearance} {publicKey} {clientSecret} />
-</script>
-```

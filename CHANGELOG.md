@@ -1,6 +1,10 @@
 # Change Log
 
-## 2.1.0
+## 3.0.0
+
+- Changed usage pattern to allow creation of elements without a payment or setup intent, in line with Stripe updates to the API.  See updated examples in README.
+
+## 2.1.1
 
 - Upgrade package dependencies
 - Custom on:complete now returns the name and address object instead of just the address object.
