@@ -1,5 +1,10 @@
 # Change Log
 
+## 3.0.1
+
+- Update README
+- No other changes
+
 ## 3.0.0
 
 - Changed usage pattern to allow creation of elements without a payment or setup intent, in line with Stripe updates to the API.  See updated examples in README.
