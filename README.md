@@ -139,8 +139,7 @@ One way to use the Address component is to bind the container.  Once we have a b
 One downside of the above is that it only gets the value when the entire form is submitted.  This may not be suitable for some checkout flows.  The Stripe-provided on:change event can be used to dispatch an event upon any change in the input, but this is not usually what we want.  You still have to check each time to see if the form element is complete.  For convenience, this package provides a custom event named "complete" that will trigger with any change that consitutes a full, valid address.
 
 ```svelte
-<Address publicKey={data.stripeKey} {clientSecret}
-	on:complete={async (e) => {
+<Address on:complete={async (e) => {
 		console.log(e.detail)
 		// we have an address we can do something with
 		// for instance, get shipping/payment options
