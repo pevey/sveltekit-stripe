@@ -100,18 +100,6 @@ The return_url below will be called after Stripe has processed the payment.  The
 </Elements>
 ```
 
-`+page.server.js`
-
-```js
-export const actions = {
-	default: async({ request }) => {
-		// handle the form submission
-		// save to databse, queue email notification, etc
-		return { success: true }
-	}
-}
-```
-
 ### Example: Self-Hosted Checkout Using the Address Element
 
 One way to use the Address component is to bind the container.  Once we have a binding, we can use the Stripe-provided function getValue():
