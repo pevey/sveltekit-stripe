@@ -22,13 +22,13 @@
 					let elements = client?.elements(elementsOptions)
 					stripeClient.set(client)
 					stripeElements.set(elements)
+					mounted = true
 				} catch (e) {
 					if (dev) console.error(e)
 				}
 			}
 		}
 		
-		mounted = true
 		return () => {
 			mounted = false
 		}

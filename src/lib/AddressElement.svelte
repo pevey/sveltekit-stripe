@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { StripeElements, StripeAddressElement, StripeAddressElementOptions } from '@stripe/stripe-js'
+	import type { StripeAddressElement, StripeAddressElementOptions } from '@stripe/stripe-js'
 	import { onMount, createEventDispatcher } from 'svelte'
 	import { dev } from '$app/environment'
 	import { stripeElements } from '$lib/stores'
@@ -24,10 +24,9 @@
 
 	let mounted = false
 
+	$: elements = $stripeElements
+
 	onMount(() => {         
-		if (dev) {
-			if (!$stripeElements) console.warn("DEBUG: elements is undefined.  The Address Element must be placed inside a StripeElements component.")
-		}
 		mounted = true
 		return () => {
 			mounted = false
@@ -52,13 +51,12 @@
 		return {
 			destroy: () => {
 				if (addressContainer) addressContainer.destroy()
-				// stripeClient.set(null)
 				stripeElements.set(undefined)
 			}
 		}
 	}
 </script>
 
-{#if mounted}
+{#if mounted && elements}
 	<div use:addressElement />
 {/if}

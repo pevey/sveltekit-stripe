@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { StripeElements, StripePaymentElement, StripePaymentElementOptions } from '@stripe/stripe-js'
+	import type { StripePaymentElement, StripePaymentElementOptions } from '@stripe/stripe-js'
 	import { onMount, createEventDispatcher } from 'svelte'
 	import { dev } from '$app/environment'
 	import { stripeElements } from '$lib/stores'
@@ -13,11 +13,9 @@
 
 	let mounted = false
 
-	// @ts-ignore
-	onMount(() => {		
-		if (dev) {
-			if (!$stripeElements) console.warn("DEBUG: elements is undefined.  The Address Element must be placed inside a StripeElements component.")
-		}   
+	$: elements = $stripeElements
+
+	onMount(() => {		  
 		mounted = true
 		return () => {
 			mounted = false
@@ -34,13 +32,12 @@
 		return {
 			destroy: () => {
 				if (paymentContainer) paymentContainer.destroy()
-				// stripeClient.set(null)
 				stripeElements.set(undefined)
 			}
 		}
 	}
 </script>
 
-{#if mounted}
+{#if mounted && elements}
 	<div use:paymentElement />
 {/if}
