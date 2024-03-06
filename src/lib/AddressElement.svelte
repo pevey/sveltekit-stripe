@@ -46,6 +46,7 @@
 			addressContainer?.on('focus', (e: any) => dispatch('focus', e))
 			addressContainer?.on('blur', (e: any) => dispatch('blur', e))
 		} catch (e) {
+			console.log(e)
 			if (dev) console.error(e)
 		}
 		return {

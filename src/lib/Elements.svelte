@@ -12,21 +12,22 @@
 
 	// @ts-ignore
 	onMount(async () => {		
-		if (!publicKey) return false
+		if (!publicKey) {
+			if (dev) console.error('No public key provided')
+			return
+		}
 	
 		if (browser) {
-			if (!$stripeClient) {
-				try {
-					const client: Stripe|null = await loadStripe(publicKey)
-					// @ts-ignore
-					let elements = client?.elements(elementsOptions)
-					stripeClient.set(client)
-					stripeElements.set(elements)
-					mounted = true
-				} catch (e) {
-					if (dev) console.error(e)
-				}
+			try {
+				const client: Stripe|null = await loadStripe(publicKey)
+				// @ts-ignore
+				let elements = client?.elements(elementsOptions)
+				stripeClient.set(client)
+				stripeElements.set(elements)
+			} catch (e) {
+				if (dev) console.error(e)
 			}
+			mounted = true
 		}
 		
 		return () => {

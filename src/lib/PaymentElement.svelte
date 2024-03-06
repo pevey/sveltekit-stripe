@@ -27,6 +27,7 @@
 			paymentContainer = $stripeElements?.create('payment', paymentElementOptions)
 			paymentContainer?.mount(node)
 		} catch (e) {
+			console.log(e)
 			if (dev) console.error(e)
 		}
 		return {

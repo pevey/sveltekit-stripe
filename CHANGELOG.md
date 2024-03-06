@@ -1,6 +1,6 @@
 # Change Log
 
-## 3.1.0
+## 3.1.1
 
 - Bump all dependencies to latest
 - Small tweaks to help ensure elements lib is loaded before Payment or Address Elements attempt to render.
