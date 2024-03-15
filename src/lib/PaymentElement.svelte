@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { StripePaymentElement, StripePaymentElementOptions } from '@stripe/stripe-js'
-	import { onMount, createEventDispatcher } from 'svelte'
+	import { onMount } from 'svelte'
 	import { dev } from '$app/environment'
 	import { stripeElements } from '$lib/stores'
 
@@ -27,7 +27,6 @@
 			paymentContainer = $stripeElements?.create('payment', paymentElementOptions)
 			paymentContainer?.mount(node)
 		} catch (e) {
-			console.log(e)
 			if (dev) console.error(e)
 		}
 		return {

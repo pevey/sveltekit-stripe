@@ -1,5 +1,10 @@
 # Change Log
 
+## 3.1.2
+
+- Remove unneeded import in Payment Element
+- Remove console.log() call from Payment Element and Address Element.  Will still log errors to console in dev mode.
+
 ## 3.1.1
 
 - Bump all dependencies to latest
