@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.1.3
+
+- Small tweaks updates to internal types
+
 ## 3.1.2
 
 - Remove unneeded import in Payment Element

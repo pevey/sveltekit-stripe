@@ -33,7 +33,7 @@
 		}
 	})
 	
-	const addressElement = (node: any) => {
+	const addressElement = (node: HTMLElement) => {
 		try {
 			// @ts-ignore
 			addressContainer = $stripeElements?.create('address', addressElementOptions)

@@ -22,7 +22,7 @@
 		}
 	})
 	
-	const paymentElement = (node: any) => {
+	const paymentElement = (node: HTMLElement) => {
 		try {
 			paymentContainer = $stripeElements?.create('payment', paymentElementOptions)
 			paymentContainer?.mount(node)
