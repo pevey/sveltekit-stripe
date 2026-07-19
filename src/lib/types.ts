@@ -16,5 +16,14 @@ export type {
 	StripeAddressElement,
 	StripeAddressElementOptions,
 	StripePaymentElement,
-	StripePaymentElementOptions
+	StripePaymentElementOptions,
+	StripeCardNumberElement,
+	StripeCardNumberElementOptions,
+	StripeCardNumberElementChangeEvent,
+	StripeCardExpiryElement,
+	StripeCardExpiryElementOptions,
+	StripeCardExpiryElementChangeEvent,
+	StripeCardCvcElement,
+	StripeCardCvcElementOptions,
+	StripeCardCvcElementChangeEvent
 } from '@stripe/stripe-js'

@@ -39,7 +39,7 @@ After integrating Stripe with SvelteKit for the umpteenth time, I created this t
 
 A functioning Stripe integration can be achieved with very little code.
 
-The options objects for the Svelte components are properly typed using the underlying Stripe library types to provide type hints for syntax.  If you define your options outside of the component, you can import the Stripe types from this library instead of the underlying Stripe package.
+The options objects for the Svelte components are properly typed using the underlying Stripe library types to provide type hints for syntax. If you define your options outside of the component, you can import the Stripe types from this library instead of the underlying Stripe package.
 
 ### Basic Checkout (client secret)
 
@@ -71,7 +71,7 @@ You can also read `{ stripe, elements }` from the `children` snippet params inst
 
 ### Example: Self-Hosted Checkout Using `use:enhance`
 
-In the example below, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com)) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
+In the example below, we assume we've already obtained a clientSecret. In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com)) will handle generating payment intents and/or setup intents. Client secrets come from these intents. See a section further down for more information about generating client secrets if you need to generate them yourself.
 
 NOTE: For payment setup rather than checkout, replace the line
 
@@ -81,9 +81,9 @@ with
 
 `const stripeResponse = await stripe.confirmSetup({ elements, redirect: 'if_required' })`
 
-The address element and payment element are Stripe-hosted forms, so any content entered will not be submitted to our server with the form.  The payment and address element allow you to embed the forms on your own page, but all the processing still happens on Stripe servers.  We can use SvelteKit's built-in `enhance` action on the form to have control what happens when a user submits the form.  See the SvelteKit documentation on Form Actions for more detailed explanation of Form Actions and `use:enhance`.
+The address element and payment element are Stripe-hosted forms, so any content entered will not be submitted to our server with the form. The payment and address element allow you to embed the forms on your own page, but all the processing still happens on Stripe servers. We can use SvelteKit's built-in `enhance` action on the form to have control what happens when a user submits the form. See the SvelteKit documentation on Form Actions for more detailed explanation of Form Actions and `use:enhance`.
 
-The return_url below will be called after Stripe has processed the payment.  The call to the return_url will include a payload from Stripe about the status of the payment.
+The return_url below will be called after Stripe has processed the payment. The call to the return_url will include a payload from Stripe about the status of the payment.
 
 `+page.svelte`
 
@@ -96,7 +96,7 @@ The return_url below will be called after Stripe has processed the payment.  The
 	let success = false
 
 	const elementsOptions: StripeElementsOptions = {
-		appearance: { 
+		appearance: {
 			theme: 'stripe',
 		},
 		mode: 'payment',
@@ -111,16 +111,16 @@ The return_url below will be called after Stripe has processed the payment.  The
 		let stripeResponse = await elements?.submit()
 		// console.log(stripeResponse)
 		if (stripeResponse && !stripeResponse.error) {
-			let stripeResponse = await stripe.confirmPayment({ 
+			let stripeResponse = await stripe.confirmPayment({
 				elements,
 				clientSecret,
 				confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
 			})
 			// console.log(stripeResponse)
-			if (stripeResponse.error) { 
+			if (stripeResponse.error) {
 				console.log(stripeResponse.error)
 				cancel()
-			} 
+			}
 		}
 		return async ({ result }) => {
 			// If we get here instead of being redirected to the url set above,
@@ -138,9 +138,10 @@ The return_url below will be called after Stripe has processed the payment.  The
 
 ### Example: Self-Hosted Checkout Using the Address Element
 
-One way to use the Address component is to bind the container.  Once we have a binding, we can use the Stripe-provided function getValue():
+One way to use the Address component is to bind the container. Once we have a binding, we can use the Stripe-provided function getValue():
 
 `+page.svelte`
+
 ```svelte
 <script>
 	import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
@@ -161,7 +162,7 @@ One way to use the Address component is to bind the container.  Once we have a b
 			// You can choose to handle the error yourself (e.g., show an error message)
 			// Or you can just continue the submission and Stripe will handle the error
 		//}
-		
+
 		// ...submit to Stripe as in example above
 	}}>
 		<AddressElement {addressElementOptions} bind:addressContainer />
@@ -174,7 +175,7 @@ One way to use the Address component is to bind the container.  Once we have a b
 
 ### Example: Using the `onComplete` Callback Prop with the Address Element
 
-One downside of the above is that it only gets the value when the entire form is submitted.  This may not be suitable for some checkout flows.  The Stripe-provided change event can be surfaced via the `onChange` callback prop, but this is not usually what we want.  You still have to check each time to see if the form element is complete.  For convenience, this package provides an `onComplete` callback prop that fires with any change that constitutes a full, valid address (it receives the address value directly).
+One downside of the above is that it only gets the value when the entire form is submitted. This may not be suitable for some checkout flows. The Stripe-provided change event can be surfaced via the `onChange` callback prop, but this is not usually what we want. You still have to check each time to see if the form element is complete. For convenience, this package provides an `onComplete` callback prop that fires with any change that constitutes a full, valid address (it receives the address value directly).
 
 ```svelte
 <AddressElement onComplete={async (value) => {
@@ -239,28 +240,99 @@ context directly:
 > The module-level `stripeClient` / `stripeElements` stores and the `sveltekit-stripe/stores.js`
 > export were removed in v4 — use `bind:` or `getStripeContext()` instead.
 
+## Card Fields (Hosted Fields style)
+
+For full control over your card form layout, use the individual `CardNumber`, `CardExpiry`,
+and `CardCvc` components — you place and style each one yourself. They render inside
+`<Elements>` (no `clientSecret` or `mode` needed for the card flow), and Stripe links the
+three together automatically.
+
+```svelte
+<script>
+	import { Elements, CardNumber, CardExpiry, CardCvc, confirmCardPayment } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+
+	let clientSecret = 'pi_...' // from your server
+	let name = $state('')
+	let stripe = $state()
+	let elements = $state()
+
+	const style = {
+		base: { color: '#333', fontFamily: 'system-ui, sans-serif', fontSize: '16px' }
+	}
+</script>
+
+<Elements publicKey={PUBLIC_STRIPE_KEY} bind:stripe bind:elements>
+	<form onsubmit={async (e) => {
+		e.preventDefault()
+		const { error, paymentIntent } = await confirmCardPayment(stripe, elements, clientSecret, {
+			payment_method: { billing_details: { name } }
+		})
+		if (error) console.log(error)
+	}}>
+		<label>Card number</label>
+		<div class="field"><CardNumber cardNumberOptions={{ style }} /></div>
+
+		<label>Expiry</label>
+		<div class="field"><CardExpiry cardExpiryOptions={{ style }} /></div>
+
+		<label>CVC</label>
+		<div class="field"><CardCvc cardCvcOptions={{ style }} /></div>
+
+		<input bind:value={name} placeholder="Name on card" />
+		<button type="submit">Pay</button>
+	</form>
+</Elements>
+```
+
+Notes:
+
+- These use Stripe's **classic card flow** (card-only; no `elements.submit()`). For wallets
+  and 100+ payment methods, use `<PaymentElement>` (the Payment Element) instead.
+- Only **one** of each field (`CardNumber`/`CardExpiry`/`CardCvc`) may be rendered per
+  `<Elements>`.
+- There is no card postal-code element — collect it with a plain input or the Address element.
+- Each field exposes `onChange`/`onReady`/`onFocus`/`onBlur`/`onEscape` and a bindable
+  `element`. The `onChange` event carries `complete`, `error`, and (for `CardNumber`) `brand`.
+
+### Confirm helpers
+
+`confirmCardPayment`, `confirmCardSetup`, and `createCardPaymentMethod` wrap Stripe's methods
+and inject the card element for you (via `elements.getElement('cardNumber')`):
+
+```svelte
+// checkout (PaymentIntent)
+await confirmCardPayment(stripe, elements, clientSecret, { payment_method: { billing_details: { name } } })
+
+// save a card (SetupIntent)
+await confirmCardSetup(stripe, elements, clientSecret, { payment_method: { billing_details: { name } } })
+
+// create a PaymentMethod to confirm server-side
+const { paymentMethod } = await createCardPaymentMethod(stripe, elements, { billing_details: { name } })
+```
+
 ## Obtaining a Client Secret
 
-Each time a user begins checkout, a payment intent needs to be generated. The payment intent contains a client secret that must be passed to the client.  A valid client secret must be passed to the Address and Payment components, or they will not render.
+Each time a user begins checkout, a payment intent needs to be generated. The payment intent contains a client secret that must be passed to the client. A valid client secret must be passed to the Address and Payment components, or they will not render.
 
-In many use cases, another system, such as an ecommerce backend, already has a method of generating and providing client secrets for checkout.  Please see the relevant documentation for your backend.
+In many use cases, another system, such as an ecommerce backend, already has a method of generating and providing client secrets for checkout. Please see the relevant documentation for your backend.
 
-### Passing from Server to Client in a Load Function 
+### Passing from Server to Client in a Load Function
 
-One way to pass a client secret to the client in SvelteKit is via the load function.  The client secret can be passed to the client as a prop, which is then passed to the Address and Payment components.
+One way to pass a client secret to the client in SvelteKit is via the load function. The client secret can be passed to the client as a prop, which is then passed to the Address and Payment components.
 
 `+page.server.js`
 
 ```js
 export const load = async () => {
-	const clientSecret = await generateClientSecret() // example function 
+	const clientSecret = await generateClientSecret() // example function
 	return {
 		clientSecret
 	}
 }
 ```
 
-Please note that `generateClientSecret()` is not a real function.  It is a placeholder for however you generate a client secret using your ecommerce backend.
+Please note that `generateClientSecret()` is not a real function. It is a placeholder for however you generate a client secret using your ecommerce backend.
 
 `+page.svelte`
 
@@ -275,7 +347,7 @@ Please note that `generateClientSecret()` is not a real function.  It is a place
 
 ### Passing from Server to Client in an Endpoint
 
-Another way to obtain a client secret is to use an endpoint.  A simplified example:
+Another way to obtain a client secret is to use an endpoint. A simplified example:
 
 `+server.js`
 
@@ -285,30 +357,32 @@ import { json } from '@sveltejs/kit'
 export async function POST({ request }) {
 	const data = await request.json()
 	// some sort of validation on data
-	const clientSecret = await generateClientSecret() // example function 
-	return json({clientSecret})
+	const clientSecret = await generateClientSecret() // example function
+	return json({ clientSecret })
 }
 ```
 
-NOTE: In practice, you would want to use recaptcha or turnstile on this endpoint.  See example in a section below.
+NOTE: In practice, you would want to use recaptcha or turnstile on this endpoint. See example in a section below.
 
 You can load the clientSecret from the server endpoint when the page loads like this:
 
 `+page.svelte`
+
 ```js
 {#if !clientSecret}
-	let clientSecret = await fetch('/api/stripe', { 
+	let clientSecret = await fetch('/api/stripe', {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
-		body: JSON.stringify({some:data}) 
+		body: JSON.stringify({some:data})
 	}).then(res => res.json())
 {:else}
 // rest of page
 ```
 
-Or, you can take advantage of the relatively new ability in Stripe to produce Payment element without yet having a clientSecret, and then generate the client secret when the payment is submitted.  This approach of creating the intent/clientSecret at the last moment is useful if the final price might change due to shipping ot other charges, and avoids the need to use the stripe client to manually update the payment intent after it was initially created.
+Or, you can take advantage of the relatively new ability in Stripe to produce Payment element without yet having a clientSecret, and then generate the client secret when the payment is submitted. This approach of creating the intent/clientSecret at the last moment is useful if the final price might change due to shipping ot other charges, and avoids the need to use the stripe client to manually update the payment intent after it was initially created.
 
 `+page.svelte`
+
 ```svelte
 <script>
 	import { Elements, PaymentElement, AddressElement } from 'sveltekit-stripe'
@@ -323,21 +397,21 @@ Or, you can take advantage of the relatively new ability in Stripe to produce Pa
 	<form method="POST" use:enhance={ async ({ cancel }) => {
 		let stripeResponse = await elements?.submit()
 		// get the client secret here before final submission of payment
-		const { clientSecret } = await fetch('/checkout/turnstile', { 
-			method: 'POST', 
+		const { clientSecret } = await fetch('/checkout/turnstile', {
+			method: 'POST',
 			body: JSON.stringify({ token })
 		}).then(res => res.json()).catch(e => console.log(e))
 
 		if (stripeResponse && !stripeResponse.error) {
-			let stripeResponse = await stripe.confirmPayment({ 
+			let stripeResponse = await stripe.confirmPayment({
 				elements,
 				clientSecret,
 				confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
 			})
-			if (stripeResponse.error) { 
+			if (stripeResponse.error) {
 				console.log(stripeResponse.error)
 				cancel()
-			} 
+			}
 		}
 		return async ({ result }) => {
 			// If we get here instead of being redirected to the url set above,
@@ -358,9 +432,9 @@ Or, you can take advantage of the relatively new ability in Stripe to produce Pa
 
 ### A Note About Security
 
-Client secrets include payment intents.  Exposing a way that a bot could generate payment intents very rapidly will expose you to carding attacks.  There are number of ways to mitigate the risk of automated carding attacks.  One way is client-side tools like Turnstile or reCAPTCHA.  A full discussion is outside the scope of this readme, but it's important to mention.  Consider using Turnstile or reCAPTCHA and other tools to rate limit the generation of payment intents.
+Client secrets include payment intents. Exposing a way that a bot could generate payment intents very rapidly will expose you to carding attacks. There are number of ways to mitigate the risk of automated carding attacks. One way is client-side tools like Turnstile or reCAPTCHA. A full discussion is outside the scope of this readme, but it's important to mention. Consider using Turnstile or reCAPTCHA and other tools to rate limit the generation of payment intents.
 
-If passing the client secret via a load function, consider adding a form action to the checkout page and make your checkout button post the token from Turnstile.  The checkout page form action will run before the checkout page load function.
+If passing the client secret via a load function, consider adding a form action to the checkout page and make your checkout button post the token from Turnstile. The checkout page form action will run before the checkout page load function.
 
 If obtaining the client secret via an endpoint, you can obtain a client-side token before calling the endpoint and validate the token before returning a payment intent. A Turnstile Example:
 
@@ -373,9 +447,10 @@ import { error, json } from '@sveltejs/kit'
 
 export async function POST({ request }) {
 	const data = await request.json()
-	if (!await validateToken(data.token, SECRET_TURNSTILE_KEY)) throw error(400, { message: 'Bot risk' })
+	if (!(await validateToken(data.token, SECRET_TURNSTILE_KEY)))
+		throw error(400, { message: 'Bot risk' })
 	// some sort of validation on data
-	const clientSecret = await generateClientSecret() // example function 
+	const clientSecret = await generateClientSecret() // example function
 	return json(clientSecret)
 }
 ```
@@ -393,84 +468,86 @@ export async function POST({ request }) {
 </script>
 ...
 {#if !token}
-	<Turnstile siteKey={PUBLIC_TURNSTILE_SITE_KEY} on:turnstile-callback={ async (e) => { 
+	<Turnstile siteKey={PUBLIC_TURNSTILE_SITE_KEY} on:turnstile-callback={ async (e) => {
 		token = e.detail.token
 	}} />
 {:else}
 ...
 ```
 
-## Generating a Client Secret
+## Server (creating intents)
 
-If you need to generate a client secret yourself, you will first need to add your secret Stripe key to your .env file:
+The Stripe server SDK cannot be run in edge environments like AWS Lambda or Cloudflare Workers.
 
-`.env`
-
-```bash
-SECRET_STRIPE_KEY="sk_1234567890..."
-```
-
-You must also add the Stripe SDK to your project:
+First, install the Stripe Node SDK (peer dependency):
 
 ```bash
-npm install -D stripe
+npm install stripe
 ```
 
-Then, you can generate a payment intent in your load function and export the client secret:
+> `sveltekit-stripe/server` is **server-only** (it imports the Node `stripe` SDK). Import it
+> only from `.server.ts` / `+server.ts` / `+page.server.ts` / hooks — never from a client
+> component.
 
-`+page.server.js`
+Create a singleton client, passing your secret key:
 
-```js
-import { Stripe } from 'stripe'
+`src/lib/server/stripe.ts`
+
+```ts
+import { createStripeServer } from 'sveltekit-stripe/server'
 import { SECRET_STRIPE_KEY } from '$env/static/private'
 
+export const stripe = createStripeServer(SECRET_STRIPE_KEY)
+```
+
+Create a PaymentIntent and return its client secret to the page:
+
+`src/routes/checkout/+page.server.ts`
+
+```ts
+import { stripe } from '$lib/server/stripe'
+import { createPaymentIntent } from 'sveltekit-stripe/server'
+
 export const load = async () => {
-	const stripe = new Stripe(SECRET_STRIPE_KEY)
-
-	const options = {
-		price: 1000, // price in smallest units (eg pennies), REQUIRED
-		currency: 'USD', // currency code, REQUIRED
-		//customer: locals.user.stripeCustomerId, required for setup intent
-		//setup_future_usage: 'on_session', 
-		//automatic_payment_methods: { enabled: true }
-	}
-
-	const paymentIntent = await stripe.paymentIntents.create(options)
-
-	return { 
-		clientSecret: paymentIntent.client_secret
-	}
+	const { clientSecret } = await createPaymentIntent(stripe, {
+		amount: 1099,
+		currency: 'usd',
+		automatic_payment_methods: { enabled: true }
+	})
+	return { clientSecret }
 }
 ```
 
-While the above example works fine, you will probably notice that instantiating a new Stripe object on every load is not ideal.  We could instead create a singleton Stripe object in your app and export it.
+`createSetupIntent(stripe, params?)` works the same way for saving a card (SetupIntent).
 
-`lib/server/stripe.js`
+### Verifying webhooks
 
-```js
-import { Stripe } from 'stripe'
-import { SECRET_STRIPE_KEY } from '$env/static/private'
-export default new Stripe(SECRET_STRIPE_KEY)
-```
+```ts
+// src/routes/webhooks/stripe/+server.ts
+import { stripe } from '$lib/server/stripe'
+import { constructWebhookEvent } from 'sveltekit-stripe/server'
+import { STRIPE_WEBHOOK_SECRET } from '$env/static/private'
+import { error, json } from '@sveltejs/kit'
 
-`+page.server.js`
-
-```js
-import stripe from '$lib/server/stripe'
-
-export const load = async () => {
-	const options = {
-		price: 1000, 
-		currency: 'USD'
+export async function POST({ request }) {
+	const payload = await request.text() // raw body — required for signature verification
+	const signature = request.headers.get('stripe-signature') ?? ''
+	let event
+	try {
+		event = constructWebhookEvent(stripe, payload, signature, STRIPE_WEBHOOK_SECRET)
+	} catch {
+		throw error(400, 'Invalid signature')
 	}
-
-	const paymentIntent = await stripe.paymentIntents.create(options)
-
-	return { 
-		clientSecret: paymentIntent.client_secret
+	if (event.type === 'payment_intent.succeeded') {
+		// fulfill the order
 	}
+	return json({ received: true })
 }
 ```
+
+You can also bring your own client — every helper takes a `Stripe` instance, so
+`new Stripe(key)` works instead of `createStripeServer`. And `createStripeServer` returns the
+raw `stripe` client, so anything not wrapped here (customers, refunds, …) is one call away.
 
 ## Passing Options
 
