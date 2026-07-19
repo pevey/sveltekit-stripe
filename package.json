@@ -59,6 +59,50 @@
 			"types": "./dist/CardCvc.svelte.d.ts",
 			"svelte": "./dist/CardCvc.svelte"
 		},
+		"./ExpressCheckout.svelte": {
+			"types": "./dist/ExpressCheckout.svelte.d.ts",
+			"svelte": "./dist/ExpressCheckout.svelte"
+		},
+		"./ContactDetails.svelte": {
+			"types": "./dist/ContactDetails.svelte.d.ts",
+			"svelte": "./dist/ContactDetails.svelte"
+		},
+		"./PaymentMethodMessaging.svelte": {
+			"types": "./dist/PaymentMethodMessaging.svelte.d.ts",
+			"svelte": "./dist/PaymentMethodMessaging.svelte"
+		},
+		"./EmbeddedCheckout.svelte": {
+			"types": "./dist/EmbeddedCheckout.svelte.d.ts",
+			"svelte": "./dist/EmbeddedCheckout.svelte"
+		},
+		"./CheckoutProvider.svelte": {
+			"types": "./dist/CheckoutProvider.svelte.d.ts",
+			"svelte": "./dist/CheckoutProvider.svelte"
+		},
+		"./CheckoutPayment.svelte": {
+			"types": "./dist/CheckoutPayment.svelte.d.ts",
+			"svelte": "./dist/CheckoutPayment.svelte"
+		},
+		"./CheckoutBillingAddress.svelte": {
+			"types": "./dist/CheckoutBillingAddress.svelte.d.ts",
+			"svelte": "./dist/CheckoutBillingAddress.svelte"
+		},
+		"./CheckoutShippingAddress.svelte": {
+			"types": "./dist/CheckoutShippingAddress.svelte.d.ts",
+			"svelte": "./dist/CheckoutShippingAddress.svelte"
+		},
+		"./CheckoutExpressCheckout.svelte": {
+			"types": "./dist/CheckoutExpressCheckout.svelte.d.ts",
+			"svelte": "./dist/CheckoutExpressCheckout.svelte"
+		},
+		"./CheckoutContactDetails.svelte": {
+			"types": "./dist/CheckoutContactDetails.svelte.d.ts",
+			"svelte": "./dist/CheckoutContactDetails.svelte"
+		},
+		"./CurrencySelector.svelte": {
+			"types": "./dist/CurrencySelector.svelte.d.ts",
+			"svelte": "./dist/CurrencySelector.svelte"
+		},
 		"./server": {
 			"types": "./dist/server/index.d.ts",
 			"svelte": "./dist/server/index.js",

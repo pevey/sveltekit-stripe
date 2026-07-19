@@ -50,3 +50,17 @@ export function constructWebhookEvent(
 ): Stripe.Event {
 	return stripe.webhooks.constructEvent(payload, signature, secret)
 }
+
+/**
+ * Create a Checkout Session and return it with its `client_secret`. Set
+ * `params.ui_mode` to `'embedded_page'` (Embedded Checkout) or `'elements'` (Custom
+ * Checkout), and include a `return_url` (required for those ui modes).
+ */
+export async function createCheckoutSession(
+	stripe: Stripe,
+	params: Stripe.Checkout.SessionCreateParams,
+	options?: Stripe.RequestOptions
+): Promise<{ session: Stripe.Response<Stripe.Checkout.Session>; clientSecret: string | null }> {
+	const session = await stripe.checkout.sessions.create(params, options)
+	return { session, clientSecret: session.client_secret }
+}

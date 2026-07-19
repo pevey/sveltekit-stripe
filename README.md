@@ -8,6 +8,11 @@ This package is a barebones SvelteKit implementation for concisely rendering Str
 
 - [Payment Element](https://stripe.com/docs/payments/payment-element)
 - [Address Element](https://stripe.com/docs/elements/address-element)
+- Individual card fields (`CardNumber` / `CardExpiry` / `CardCvc`) + confirm helpers
+- [Express Checkout Element](https://stripe.com/docs/elements/express-checkout-element) (Apple/Google Pay, Link, PayPal)
+- [Contact Details Element](https://stripe.com/docs/payments/elements/contact-details-element) (email + Link, with pre-fill)
+- [Payment Method Messaging Element](https://stripe.com/docs/payments/payment-method-messaging) (BNPL promo)
+- Server helpers (`sveltekit-stripe/server`): configured client, PaymentIntent/SetupIntent, webhook verification
 
 ## Setup
 
@@ -311,6 +316,77 @@ await confirmCardSetup(stripe, elements, clientSecret, { payment_method: { billi
 const { paymentMethod } = await createCardPaymentMethod(stripe, elements, { billing_details: { name } })
 ```
 
+## Express Checkout, contact details & messaging
+
+### Express Checkout (wallet buttons)
+
+The Express Checkout Element shows one-click wallet buttons (Apple Pay, Google Pay, Link,
+PayPal, …). It needs an `<Elements>` group created with `mode`/`amount`/`currency`:
+
+```svelte
+<script>
+	import { Elements, ExpressCheckout } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	let return_url = 'https://example.com/checkout/complete'
+	let stripe = $state()
+	let elements = $state()
+</script>
+
+<Elements
+	publicKey={PUBLIC_STRIPE_KEY}
+	elementsOptions={{ mode: 'payment', amount: 1099, currency: 'usd' }}
+	bind:stripe
+	bind:elements
+>
+	<ExpressCheckout
+		onConfirm={async () => {
+			const clientSecret = await fetchClientSecretFromServer()
+			const { error } = await stripe.confirmPayment({ elements, clientSecret, confirmParams: { return_url }, redirect: 'if_required' })
+			if (error) console.log(error)
+		}}
+	/>
+</Elements>
+```
+
+### Contact Details (email + Link) — with pre-fill
+
+Collects the customer's email and drives Link autofill. Pre-fill a logged-in customer via
+`defaultValues`:
+
+```svelte
+<script>
+	import { ContactDetails } from 'sveltekit-stripe'
+	let { data } = $props() // e.g. { user: { email } } from your load function
+</script>
+
+<ContactDetails
+	contactDetailsOptions={{ defaultValues: { email: data.user?.email } }}
+	onComplete={(value) => console.log('email', value.email)}
+/>
+```
+
+### Payment Method Messaging (BNPL promo)
+
+Displays "pay over time" messaging. Its options are required:
+
+```svelte
+<script>
+	import { PaymentMethodMessaging } from 'sveltekit-stripe'
+</script>
+
+<PaymentMethodMessaging
+	paymentMethodMessagingOptions={{
+		amount: 1099,
+		currency: 'usd',
+		countryCode: 'US',
+		paymentMethodTypes: ['klarna', 'afterpay_clearpay']
+	}}
+/>
+```
+
+All of these are styled by the Appearance API you pass to `<Elements>` via
+`elementsOptions.appearance`.
+
 ## Obtaining a Client Secret
 
 Each time a user begins checkout, a payment intent needs to be generated. The payment intent contains a client secret that must be passed to the client. A valid client secret must be passed to the Address and Payment components, or they will not render.
@@ -474,6 +550,72 @@ export async function POST({ request }) {
 {:else}
 ...
 ```
+
+## Checkout Sessions
+
+Stripe Checkout Sessions come in two forms. Create the session on the server, then use the
+matching client piece.
+
+### Server
+
+```ts
+import { stripe } from '$lib/server/stripe'
+import { createCheckoutSession } from 'sveltekit-stripe/server'
+
+export const load = async () => {
+	const { clientSecret } = await createCheckoutSession(stripe, {
+		ui_mode: 'embedded_page', // or 'elements' for Custom Checkout
+		mode: 'payment',
+		line_items: [{ price: 'price_123', quantity: 1 }],
+		return_url: 'https://example.com/return?session_id={CHECKOUT_SESSION_ID}'
+	})
+	return { clientSecret }
+}
+```
+
+### Embedded Checkout (Stripe-hosted)
+
+```svelte
+<script>
+	import { EmbeddedCheckout } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	let { data } = $props()
+</script>
+
+<EmbeddedCheckout publicKey={PUBLIC_STRIPE_KEY} clientSecret={data.clientSecret} />
+```
+
+### Custom Checkout (build with Elements)
+
+Wrap your checkout-mode elements in `<CheckoutProvider>` (session created with
+`ui_mode: 'elements'`), and confirm via `loadCheckoutActions`:
+
+```svelte
+<script>
+	import { CheckoutProvider, CheckoutPayment, CurrencySelector, loadCheckoutActions } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	let { data } = $props()
+	let checkout = $state()
+</script>
+
+<CheckoutProvider publicKey={PUBLIC_STRIPE_KEY} clientSecret={data.clientSecret} bind:checkout>
+	<form onsubmit={async (e) => {
+		e.preventDefault()
+		const actions = await loadCheckoutActions(checkout)
+		const result = await actions.confirm({ returnUrl: 'https://example.com/return' })
+		if (result.type === 'error') console.log(result.error)
+	}}>
+		<CurrencySelector />
+		<CheckoutPayment />
+		<button type="submit">Pay</button>
+	</form>
+</CheckoutProvider>
+```
+
+Also available in Custom Checkout: `CheckoutBillingAddress`, `CheckoutShippingAddress`,
+`CheckoutContactDetails`, `CheckoutExpressCheckout`. These read the `<CheckoutProvider>`
+context (`getCheckoutContext`) — they are separate from the regular `<Elements>` components
+(`getStripeContext`) and are not interchangeable.
 
 ## Server (creating intents)
 
