@@ -18,6 +18,7 @@ export { default as CurrencySelector } from './CurrencySelector.svelte'
 export { getStripeContext } from './context.js'
 export { getCheckoutContext } from './checkout-context.js'
 export { loadCheckoutActions } from './checkout-actions.js'
+export { redirectToPaymentLink } from './payment-links.js'
 export {
 	getCardElement,
 	confirmCardPayment,

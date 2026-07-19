@@ -617,6 +617,40 @@ Also available in Custom Checkout: `CheckoutBillingAddress`, `CheckoutShippingAd
 context (`getCheckoutContext`) — they are separate from the regular `<Elements>` components
 (`getStripeContext`) and are not interchangeable.
 
+## Payment Links
+
+A [Payment Link](https://docs.stripe.com/payment-links) is a reusable, Stripe-hosted URL.
+Create it on the server and send the customer to it.
+
+### Server
+
+```ts
+import { stripe } from '$lib/server/stripe'
+import { createPaymentLink } from 'sveltekit-stripe/server'
+
+export const load = async () => {
+	const { url } = await createPaymentLink(stripe, {
+		line_items: [{ price: 'price_123', quantity: 1 }]
+	})
+	return { url }
+}
+```
+
+### Client
+
+Payment Links are external pages, so redirect with a full-page navigation — not SvelteKit's
+`goto` (which is for internal routes):
+
+```svelte
+<script>
+	import { redirectToPaymentLink } from 'sveltekit-stripe'
+	let { data } = $props()
+</script>
+
+<button onclick={() => redirectToPaymentLink(data.url)}>Checkout</button>
+<!-- or simply: <a href={data.url}>Checkout</a> -->
+```
+
 ## Server (creating intents)
 
 The Stripe server SDK cannot be run in edge environments like AWS Lambda or Cloudflare Workers.

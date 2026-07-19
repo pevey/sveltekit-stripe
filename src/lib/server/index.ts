@@ -64,3 +64,16 @@ export async function createCheckoutSession(
 	const session = await stripe.checkout.sessions.create(params, options)
 	return { session, clientSecret: session.client_secret }
 }
+
+/**
+ * Create a Payment Link (a reusable, Stripe-hosted checkout URL) and return it with its
+ * `url`. Send the customer to `url` on the client.
+ */
+export async function createPaymentLink(
+	stripe: Stripe,
+	params: Stripe.PaymentLinkCreateParams,
+	options?: Stripe.RequestOptions
+): Promise<{ paymentLink: Stripe.Response<Stripe.PaymentLink>; url: string }> {
+	const paymentLink = await stripe.paymentLinks.create(params, options)
+	return { paymentLink, url: paymentLink.url }
+}
