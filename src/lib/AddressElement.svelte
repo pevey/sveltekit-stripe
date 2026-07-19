@@ -1,62 +1,67 @@
 <script lang="ts">
 	import type { StripeAddressElement, StripeAddressElementOptions } from '@stripe/stripe-js'
-	import { onMount, createEventDispatcher } from 'svelte'
-	import { dev } from '$app/environment'
-	import { stripeElements } from '$lib/stores'
+	import type { Attachment } from 'svelte/attachments'
+	import { dev } from '$app/env'
+	import { getStripeContext } from './context.js'
 
-	export let addressElementOptions: StripeAddressElementOptions|undefined = undefined
-	export let addressContainer: StripeAddressElement|undefined = undefined
-	
-	const dispatch = createEventDispatcher()
+	interface Props {
+		// see all options at https://stripe.com/docs/js/elements_object/create_address_element
+		addressElementOptions?: StripeAddressElementOptions
+		addressContainer?: StripeAddressElement
+		onChange?: (e: any) => void
+		onComplete?: (value: any) => void
+		onReady?: (e: any) => void
+		onFocus?: (e: any) => void
+		onBlur?: (e: any) => void
+	}
 
-	// see all options available at
-	// https://stripe.com/docs/js/elements_object/create_address_element
-	if (!addressElementOptions) addressElementOptions = { mode: 'shipping' }
-	addressElementOptions.mode = addressElementOptions.mode || 'shipping'
-	addressElementOptions.autocomplete = addressElementOptions.autocomplete || { mode: 'automatic' }
-	addressElementOptions.allowedCountries = addressElementOptions.allowedCountries || ['US']
-	addressElementOptions.blockPoBox = addressElementOptions.blockPoBox || false
-	addressElementOptions.contacts = addressElementOptions.contacts || []
-	addressElementOptions.defaultValues = addressElementOptions.defaultValues || {}
-	addressElementOptions.fields = addressElementOptions.fields || { phone: 'always' }
-	addressElementOptions.validation = addressElementOptions.validation || { phone: { required: 'never' } }
-	addressElementOptions.display = addressElementOptions.display || { name: 'split' }
+	let {
+		addressElementOptions,
+		addressContainer = $bindable(),
+		onChange,
+		onComplete,
+		onReady,
+		onFocus,
+		onBlur
+	}: Props = $props()
 
-	let mounted = false
+	const ctx = getStripeContext()
+	let elements = $derived(ctx.elements)
 
-	$: elements = $stripeElements
-
-	onMount(() => {         
-		mounted = true
-		return () => {
-			mounted = false
-		}
+	// Merge caller options over sensible defaults (props are read-only in runes).
+	const options: StripeAddressElementOptions = $derived({
+		mode: 'shipping',
+		autocomplete: { mode: 'automatic' },
+		allowedCountries: ['US'],
+		blockPoBox: false,
+		contacts: [],
+		defaultValues: {},
+		fields: { phone: 'always' },
+		validation: { phone: { required: 'never' } },
+		display: { name: 'split' },
+		...addressElementOptions
 	})
-	
-	const addressElement = (node: HTMLElement) => {
+
+	const addressElement: Attachment<HTMLElement> = (node) => {
 		try {
-			// @ts-ignore
-			addressContainer = $stripeElements?.create('address', addressElementOptions)
+			addressContainer = ctx.elements?.create('address', options)
 			addressContainer?.mount(node)
-			addressContainer?.on('change', (e: any) => { 
-				dispatch('change', e)
-				if (e.complete) dispatch('complete', e.value)
+			addressContainer?.on('change', (e: any) => {
+				onChange?.(e)
+				if (e.complete) onComplete?.(e.value)
 			})
-			addressContainer?.on('ready', (e: any) => dispatch('ready', e))
-			addressContainer?.on('focus', (e: any) => dispatch('focus', e))
-			addressContainer?.on('blur', (e: any) => dispatch('blur', e))
+			addressContainer?.on('ready', (e: any) => onReady?.(e))
+			addressContainer?.on('focus', (e: any) => onFocus?.(e))
+			addressContainer?.on('blur', (e: any) => onBlur?.(e))
 		} catch (e) {
 			if (dev) console.error(e)
 		}
-		return {
-			destroy: () => {
-				if (addressContainer) addressContainer.destroy()
-				stripeElements.set(undefined)
-			}
+		return () => {
+			if (addressContainer) addressContainer.destroy()
 		}
 	}
 </script>
 
-{#if mounted && elements}
-	<div use:addressElement />
+{#if elements}
+	<div {@attach addressElement}></div>
 {/if}

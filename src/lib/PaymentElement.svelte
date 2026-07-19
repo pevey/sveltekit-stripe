@@ -1,43 +1,36 @@
 <script lang="ts">
 	import type { StripePaymentElement, StripePaymentElementOptions } from '@stripe/stripe-js'
-	import { onMount } from 'svelte'
-	import { dev } from '$app/environment'
-	import { stripeElements } from '$lib/stores'
+	import type { Attachment } from 'svelte/attachments'
+	import { dev } from '$app/env'
+	import { getStripeContext } from './context.js'
 
-	export let paymentElementOptions: StripePaymentElementOptions|undefined = undefined
-	export let paymentContainer: StripePaymentElement|undefined = undefined
+	interface Props {
+		// see all options at https://stripe.com/docs/js/elements_object/create_payment_element
+		paymentElementOptions?: StripePaymentElementOptions
+		paymentContainer?: StripePaymentElement
+	}
 
-	// see all options available at
-	// https://stripe.com/docs/js/elements_object/create_payment_element
-	if (!paymentElementOptions) paymentElementOptions = { layout: 'tabs' }
+	let {
+		paymentElementOptions = { layout: 'tabs' },
+		paymentContainer = $bindable()
+	}: Props = $props()
 
-	let mounted = false
+	const ctx = getStripeContext()
+	let elements = $derived(ctx.elements)
 
-	$: elements = $stripeElements
-
-	onMount(() => {		  
-		mounted = true
-		return () => {
-			mounted = false
-		}
-	})
-	
-	const paymentElement = (node: HTMLElement) => {
+	const paymentElement: Attachment<HTMLElement> = (node) => {
 		try {
-			paymentContainer = $stripeElements?.create('payment', paymentElementOptions)
+			paymentContainer = ctx.elements?.create('payment', paymentElementOptions)
 			paymentContainer?.mount(node)
 		} catch (e) {
 			if (dev) console.error(e)
 		}
-		return {
-			destroy: () => {
-				if (paymentContainer) paymentContainer.destroy()
-				stripeElements.set(undefined)
-			}
+		return () => {
+			if (paymentContainer) paymentContainer.destroy()
 		}
 	}
 </script>
 
-{#if mounted && elements}
-	<div use:paymentElement />
+{#if elements}
+	<div {@attach paymentElement}></div>
 {/if}

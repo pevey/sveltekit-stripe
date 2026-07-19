@@ -19,6 +19,12 @@ cd my-app
 npm install -D sveltekit-stripe
 ```
 
+Install the Stripe.js peer dependency:
+
+```bash
+npm install @stripe/stripe-js
+```
+
 Add your Stripe public key to your environment variables:
 
 `.env`
@@ -35,17 +41,45 @@ A functioning Stripe integration can be achieved with very little code.
 
 The options objects for the Svelte components are properly typed using the underlying Stripe library types to provide type hints for syntax.  If you define your options outside of the component, you can import the Stripe types from this library instead of the underlying Stripe package.
 
+### Basic Checkout (client secret)
+
+The recommended pattern binds `stripe` and `elements` out of `<Elements>` and confirms in your submit handler:
+
+```svelte
+<script>
+	import { Elements, PaymentElement } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	let clientSecret = 'pi_...' // from your server
+	let return_url = 'https://example.com/checkout/complete'
+	let stripe = $state()
+	let elements = $state()
+</script>
+
+<Elements publicKey={PUBLIC_STRIPE_KEY} elementsOptions={{ clientSecret }} bind:stripe bind:elements>
+	<form onsubmit={async (e) => {
+		e.preventDefault()
+		const { error } = await stripe.confirmPayment({ elements, clientSecret, confirmParams: { return_url }, redirect: 'if_required' })
+		if (error) console.log(error)
+	}}>
+		<PaymentElement />
+		<button type="submit">Pay</button>
+	</form>
+</Elements>
+```
+
+You can also read `{ stripe, elements }` from the `children` snippet params instead of binding, if you prefer.
+
 ### Example: Self-Hosted Checkout Using `use:enhance`
 
 In the example below, we assume we've already obtained a clientSecret.  In many cases, your existing ecommerce backend (such as [Vendure](https://vendure.io)) or [Medusa](https://medusajs.com)) will handle generating payment intents and/or setup intents.  Client secrets come from these intents.  See a section further down for more information about generating client secrets if you need to generate them yourself.
 
 NOTE: For payment setup rather than checkout, replace the line
 
-`const stripeResponse = await $stripeClient.confirmPayment({ elements: $stripeElements, redirect: 'if_required' })`
+`const stripeResponse = await stripe.confirmPayment({ elements, redirect: 'if_required' })`
 
 with
 
-`const stripeResponse = await $stripeClient.confirmSetup({ elements: $stripeElements, redirect: 'if_required' })`
+`const stripeResponse = await stripe.confirmSetup({ elements, redirect: 'if_required' })`
 
 The address element and payment element are Stripe-hosted forms, so any content entered will not be submitted to our server with the form.  The payment and address element allow you to embed the forms on your own page, but all the processing still happens on Stripe servers.  We can use SvelteKit's built-in `enhance` action on the form to have control what happens when a user submits the form.  See the SvelteKit documentation on Form Actions for more detailed explanation of Form Actions and `use:enhance`.
 
@@ -55,13 +89,13 @@ The return_url below will be called after Stripe has processed the payment.  The
 
 ```svelte
 <script>
-	import { Elements, PaymentElement, type StripePaymentElementOptions } from 'sveltekit-stripe'
+	import { Elements, PaymentElement, type StripeElementsOptions } from 'sveltekit-stripe'
 	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
 	import { enhance } from '$app/forms'
 	let clientSecret = 'pi_1234567890...' // from your server, see README
 	let success = false
 
-	const elementsOptions: StripePaymentElementOptions = {
+	const elementsOptions: StripeElementsOptions = {
 		appearance: { 
 			theme: 'stripe',
 		},
@@ -71,7 +105,8 @@ The return_url below will be called after Stripe has processed the payment.  The
 	}
 </script>
 
-<Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
+<Elements publicKey={PUBLIC_STRIPE_KEY} {elementsOptions}>
+	{#snippet children({ stripe, elements })}
 	<form method="POST" use:enhance={ async ({ cancel }) => {
 		let stripeResponse = await elements?.submit()
 		// console.log(stripeResponse)
@@ -97,6 +132,7 @@ The return_url below will be called after Stripe has processed the payment.  The
 		<PaymentElement />
 		<button type="submit">Place Your Order</button>
 	</form>
+	{/snippet}
 </Elements>
 ```
 
@@ -114,7 +150,8 @@ One way to use the Address component is to bind the container.  Once we have a b
 	let addressContainer
 </script>
 
-<Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
+<Elements publicKey={PUBLIC_STRIPE_KEY} {elementsOptions}>
+	{#snippet children({ stripe, elements })}
 	<form method="POST" use:enhance={ async ({ cancel }) => {
 		const {complete, value} = await addressContainer.getValue()
 		if (complete) {
@@ -131,21 +168,76 @@ One way to use the Address component is to bind the container.  Once we have a b
 		<PaymentElement />
 		<button type="submit">Place Your Order</button>
 	</form>
+	{/snippet}
 </Elements>
 ```
 
-### Example: Using the Custom on:complete Event with the Address Element
+### Example: Using the `onComplete` Callback Prop with the Address Element
 
-One downside of the above is that it only gets the value when the entire form is submitted.  This may not be suitable for some checkout flows.  The Stripe-provided on:change event can be used to dispatch an event upon any change in the input, but this is not usually what we want.  You still have to check each time to see if the form element is complete.  For convenience, this package provides a custom event named "complete" that will trigger with any change that consitutes a full, valid address.
+One downside of the above is that it only gets the value when the entire form is submitted.  This may not be suitable for some checkout flows.  The Stripe-provided change event can be surfaced via the `onChange` callback prop, but this is not usually what we want.  You still have to check each time to see if the form element is complete.  For convenience, this package provides an `onComplete` callback prop that fires with any change that constitutes a full, valid address (it receives the address value directly).
 
 ```svelte
-<Address on:complete={async (e) => {
-		console.log(e.detail)
+<AddressElement onComplete={async (value) => {
+		console.log(value)
 		// we have an address we can do something with
 		// for instance, get shipping/payment options
 	}}
 />
 ```
+
+## Deferred Intent (create the PaymentIntent at submit)
+
+You can render the Payment Element before creating a PaymentIntent by passing `mode`,
+`amount`, and `currency` instead of a `clientSecret`. Fetch the client secret at submit:
+
+```svelte
+<script>
+	import { Elements, PaymentElement } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	let return_url = 'https://example.com/checkout/complete'
+	let stripe = $state()
+	let elements = $state()
+</script>
+
+<Elements
+	publicKey={PUBLIC_STRIPE_KEY}
+	elementsOptions={{ mode: 'payment', amount: 1099, currency: 'usd' }}
+	bind:stripe
+	bind:elements
+>
+	<form onsubmit={async (e) => {
+		e.preventDefault()
+		const { error: submitError } = await elements.submit()
+		if (submitError) return
+		const clientSecret = await fetchClientSecretFromServer()
+		const { error } = await stripe.confirmPayment({
+			elements,
+			clientSecret,
+			confirmParams: { return_url }
+		})
+		if (error) console.log(error)
+	}}>
+		<PaymentElement />
+		<button type="submit">Pay</button>
+	</form>
+</Elements>
+```
+
+### Accessing `stripe` and `elements`
+
+Bind them out of `<Elements>` with `bind:stripe` / `bind:elements` (shown above) to use
+in your submit handler. Inside any descendant component you can also read the reactive
+context directly:
+
+```svelte
+<script>
+	import { getStripeContext } from 'sveltekit-stripe'
+	const ctx = getStripeContext() // { stripe, elements }, reactive
+</script>
+```
+
+> The module-level `stripeClient` / `stripeElements` stores and the `sveltekit-stripe/stores.js`
+> export were removed in v4 — use `bind:` or `getStripeContext()` instead.
 
 ## Obtaining a Client Secret
 
@@ -226,7 +318,8 @@ Or, you can take advantage of the relatively new ability in Stripe to produce Pa
 	let addressContainer
 </script>
 
-<Elements publicKey={PUBLIC_STRIPE_KEY} let:stripe let:elements {elementsOptions}>
+<Elements publicKey={PUBLIC_STRIPE_KEY} {elementsOptions}>
+	{#snippet children({ stripe, elements })}
 	<form method="POST" use:enhance={ async ({ cancel }) => {
 		let stripeResponse = await elements?.submit()
 		// get the client secret here before final submission of payment
@@ -253,12 +346,13 @@ Or, you can take advantage of the relatively new ability in Stripe to produce Pa
 			processing = false
 		}
 	}}>
-		<AddressElement on:complete={ async (e) => {
-			console.log(e.detail.firstName, e.detail.lastName, e.detail.address)
+		<AddressElement onComplete={ async (value) => {
+			console.log(value.firstName, value.lastName, value.address)
 		}}/>
 		<PaymentElement />
 		<button type="submit">Place Your Order</button>
 	</form>
+	{/snippet}
 </Elements>
 ```
 
@@ -414,7 +508,7 @@ For details about options available, see the Stripe Documentation:
 </script>
 
 ...
-<Address {addressElementOptions} />
+<AddressElement {addressElementOptions} />
 ...
 ```
 

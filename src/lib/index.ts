@@ -1,15 +1,17 @@
 export { default as Elements } from './Elements.svelte'
 export { default as AddressElement } from './AddressElement.svelte'
 export { default as PaymentElement } from './PaymentElement.svelte'
-export { stripeClient, stripeElements } from './stores'
-export type { 
+export { getStripeContext } from './context.js'
+export type {
+	StripeContext,
 	Address,
-	Appearance, 
-	Stripe, 
-	StripeElement, 
-	StripeElementsOptions, 
-	StripeAddressElement, 
-	StripeAddressElementOptions, 
-	StripePaymentElement, 
-	StripePaymentElementOptions 
-} from '@stripe/stripe-js'
+	Appearance,
+	Stripe,
+	StripeElement,
+	StripeElements,
+	StripeElementsOptions,
+	StripeAddressElement,
+	StripeAddressElementOptions,
+	StripePaymentElement,
+	StripePaymentElementOptions
+} from './types.js'
