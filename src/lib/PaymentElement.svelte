@@ -19,14 +19,18 @@
 	let elements = $derived(ctx.elements)
 
 	const paymentElement: Attachment<HTMLElement> = (node) => {
+		// Local for mount/teardown; reading back the `$bindable` we write here would loop the effect
+		// (`effect_update_depth_exceeded`).
+		let el: StripePaymentElement | undefined
 		try {
-			paymentContainer = ctx.elements?.create('payment', paymentElementOptions)
-			paymentContainer?.mount(node)
+			el = ctx.elements?.create('payment', paymentElementOptions)
+			paymentContainer = el
+			el?.mount(node)
 		} catch (e) {
 			if (dev) console.error(e)
 		}
 		return () => {
-			if (paymentContainer) paymentContainer.destroy()
+			el?.destroy()
 		}
 	}
 </script>

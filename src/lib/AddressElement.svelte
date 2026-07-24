@@ -43,21 +43,26 @@
 	})
 
 	const addressElement: Attachment<HTMLElement> = (node) => {
+		// Drive mount/teardown from a LOCAL — assigning `addressContainer` is a write-only side effect.
+		// Reading the bindable back inside this attachment would make the effect depend on state it also
+		// writes, which loops immediately (`effect_update_depth_exceeded`).
+		let el: StripeAddressElement | undefined
 		try {
-			addressContainer = ctx.elements?.create('address', options)
-			addressContainer?.mount(node)
-			addressContainer?.on('change', (e: any) => {
+			el = ctx.elements?.create('address', options)
+			addressContainer = el
+			el?.mount(node)
+			el?.on('change', (e: any) => {
 				onChange?.(e)
 				if (e.complete) onComplete?.(e.value)
 			})
-			addressContainer?.on('ready', (e: any) => onReady?.(e))
-			addressContainer?.on('focus', (e: any) => onFocus?.(e))
-			addressContainer?.on('blur', (e: any) => onBlur?.(e))
+			el?.on('ready', (e: any) => onReady?.(e))
+			el?.on('focus', (e: any) => onFocus?.(e))
+			el?.on('blur', (e: any) => onBlur?.(e))
 		} catch (e) {
 			if (dev) console.error(e)
 		}
 		return () => {
-			if (addressContainer) addressContainer.destroy()
+			el?.destroy()
 		}
 	}
 </script>
