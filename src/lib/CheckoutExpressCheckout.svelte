@@ -22,22 +22,22 @@
 	let checkout = $derived(ctx.checkout)
 
 	const expressCheckout: Attachment<HTMLElement> = (node) => {
+		let el: typeof element = undefined
 		try {
-			element = ctx.checkout?.createExpressCheckoutElement(expressCheckoutOptions)
-			element?.mount(node)
-			element?.on('ready', () => onReady?.())
-			element?.on('confirm', (e) => onConfirm?.(e))
-			element?.on('cancel', () => onCancel?.())
-			element?.on('focus', () => onFocus?.())
-			element?.on('blur', () => onBlur?.())
-			element?.on('escape', () => onEscape?.())
-			element?.on('loaderror', (e) => onLoadError?.(e.error))
+			el = ctx.checkout?.createExpressCheckoutElement(expressCheckoutOptions)
+			element = el
+			el?.mount(node)
+			el?.on('ready', () => onReady?.())
+			el?.on('confirm', (e) => onConfirm?.(e))
+			el?.on('cancel', () => onCancel?.())
+			el?.on('focus', () => onFocus?.())
+			el?.on('blur', () => onBlur?.())
+			el?.on('escape', () => onEscape?.())
+			el?.on('loaderror', (e) => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}
-		return () => {
-			if (element) element.destroy()
-		}
+		return () => el?.destroy()
 	}
 </script>
 

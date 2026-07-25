@@ -52,26 +52,26 @@
 	let elements = $derived(ctx.elements)
 
 	const expressCheckout: Attachment<HTMLElement> = (node) => {
+		let el: typeof element = undefined
 		try {
-			element = ctx.elements?.create('expressCheckout', expressCheckoutOptions)
-			element?.mount(node)
-			element?.on('ready', (e) => onReady?.(e))
-			element?.on('confirm', (e) => onConfirm?.(e))
-			element?.on('click', (e) => onClick?.(e))
-			element?.on('cancel', () => onCancel?.())
-			element?.on('shippingaddresschange', (e) => onShippingAddressChange?.(e))
-			element?.on('shippingratechange', (e) => onShippingRateChange?.(e))
-			element?.on('availablepaymentmethodschange', (e) => onAvailablePaymentMethodsChange?.(e))
-			element?.on('focus', () => onFocus?.())
-			element?.on('blur', () => onBlur?.())
-			element?.on('escape', () => onEscape?.())
-			element?.on('loaderror', (e) => onLoadError?.(e.error))
+			el = ctx.elements?.create('expressCheckout', expressCheckoutOptions)
+			element = el
+			el?.mount(node)
+			el?.on('ready', (e) => onReady?.(e))
+			el?.on('confirm', (e) => onConfirm?.(e))
+			el?.on('click', (e) => onClick?.(e))
+			el?.on('cancel', () => onCancel?.())
+			el?.on('shippingaddresschange', (e) => onShippingAddressChange?.(e))
+			el?.on('shippingratechange', (e) => onShippingRateChange?.(e))
+			el?.on('availablepaymentmethodschange', (e) => onAvailablePaymentMethodsChange?.(e))
+			el?.on('focus', () => onFocus?.())
+			el?.on('blur', () => onBlur?.())
+			el?.on('escape', () => onEscape?.())
+			el?.on('loaderror', (e) => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}
-		return () => {
-			if (element) element.destroy()
-		}
+		return () => el?.destroy()
 	}
 </script>
 

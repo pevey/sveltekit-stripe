@@ -26,16 +26,16 @@
 	let elements = $derived(ctx.elements)
 
 	const paymentMethodMessaging: Attachment<HTMLElement> = (node) => {
+		let el: typeof element = undefined
 		try {
-			element = ctx.elements?.create('paymentMethodMessaging', paymentMethodMessagingOptions)
-			element?.mount(node)
-			element?.on('ready', () => onReady?.())
+			el = ctx.elements?.create('paymentMethodMessaging', paymentMethodMessagingOptions)
+			element = el
+			el?.mount(node)
+			el?.on('ready', () => onReady?.())
 		} catch (e) {
 			if (dev) console.error(e)
 		}
-		return () => {
-			if (element) element.destroy()
-		}
+		return () => el?.destroy()
 	}
 </script>
 

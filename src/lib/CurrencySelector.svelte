@@ -20,20 +20,20 @@
 	let checkout = $derived(ctx.checkout)
 
 	const currencySelector: Attachment<HTMLElement> = (node) => {
+		let el: typeof element = undefined
 		try {
-			element = ctx.checkout?.createCurrencySelectorElement()
-			element?.mount(node)
-			element?.on('ready', () => onReady?.())
-			element?.on('focus', () => onFocus?.())
-			element?.on('blur', () => onBlur?.())
-			element?.on('escape', () => onEscape?.())
-			element?.on('loaderror', (e) => onLoadError?.(e.error))
+			el = ctx.checkout?.createCurrencySelectorElement()
+			element = el
+			el?.mount(node)
+			el?.on('ready', () => onReady?.())
+			el?.on('focus', () => onFocus?.())
+			el?.on('blur', () => onBlur?.())
+			el?.on('escape', () => onEscape?.())
+			el?.on('loaderror', (e) => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}
-		return () => {
-			if (element) element.destroy()
-		}
+		return () => el?.destroy()
 	}
 </script>
 

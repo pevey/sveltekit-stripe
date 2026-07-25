@@ -387,6 +387,137 @@ Displays "pay over time" messaging. Its options are required:
 All of these are styled by the Appearance API you pass to `<Elements>` via
 `elementsOptions.appearance`.
 
+## Redirect-based methods (Bancontact, iDEAL, giropay, Przelewy24)
+
+These methods redirect the shopper to their bank and return to a `return_url`.
+`sveltekit-stripe`'s share is small: a thin `confirm<Method>Payment` helper (mirroring
+[`confirmCardPayment`](#confirm-helpers)) plus a shared `getRedirectResult` for the return
+page. Intent creation and the webhook stay pure `stripe` on the server.
+
+> The per-method helpers (`confirmIdealPayment`, `confirmBancontactPayment`, `confirmGiropayPayment`,
+> `confirmP24Payment`) and drop-in components (`<StripeIdeal>`, `<StripeBancontact>`, `<StripeGiropay>`,
+> `<StripeP24>`) are **built in** — import them directly.
+
+### Example: Bancontact
+
+Bancontact has no Stripe element — only a billing name — so it's the minimal case (a
+rendering method like iDEAL follows the same shape, but with a bank-selector component in
+place of the bare name input).
+
+**Server — create the PaymentIntent** (`src/lib/payment.remote.ts`; Bancontact requires EUR
+and the method type on the intent):
+
+```ts
+import Stripe from 'stripe'
+import { command } from '$app/server'
+import { STRIPE_SECRET_KEY } from '$env/static/private'
+
+const stripe = new Stripe(STRIPE_SECRET_KEY)
+
+export const createBancontactIntent = command(async ({ amount }: { amount: number }) => {
+  const intent = await stripe.paymentIntents.create({
+    amount,                              // minor units, e.g. 1999 = €19.99
+    currency: 'eur',
+    payment_method_types: ['bancontact']
+  })
+  return { clientSecret: intent.client_secret! }
+})
+```
+
+**Checkout page** (`/checkout/+page.svelte`) — `<Elements>` only supplies the `stripe`
+instance; Bancontact renders nothing but a name field:
+
+```svelte
+<script lang="ts">
+  import { Elements, StripeBancontact, getStripeContext, confirmBancontactPayment } from 'sveltekit-stripe'
+  import { createBancontactIntent } from '$lib/payment.remote'
+  import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+
+  let name = $state('')
+</script>
+
+<Elements publicKey={PUBLIC_STRIPE_KEY}>
+  {#snippet children()}
+    {@const ctx = getStripeContext()}
+    <StripeBancontact bind:name />
+    <button onclick={async () => {
+      const { clientSecret } = await createBancontactIntent({ amount: 1999 })
+      const { error } = await confirmBancontactPayment(ctx.stripe, clientSecret, {
+        billingDetails: { name },
+        returnUrl: `${location.origin}/checkout/return`
+      })
+      if (error) console.error(error.message)   // on success the browser redirects to the bank
+    }}>Pay with Bancontact</button>
+  {/snippet}
+</Elements>
+```
+
+**Return page** (`/checkout/return/+page.svelte`) — shared by every redirect method:
+
+```svelte
+<script lang="ts">
+  import { Elements, getStripeContext, getRedirectResult } from 'sveltekit-stripe'
+  import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+</script>
+
+<Elements publicKey={PUBLIC_STRIPE_KEY}>
+  {#snippet children()}
+    {@const ctx = getStripeContext()}
+    {#await getRedirectResult(ctx.stripe) then { status }}
+      {#if status === 'succeeded'}       Payment complete ✅
+      {:else if status === 'processing'} Processing…
+      {:else}                            Payment failed ❌
+      {/if}
+    {/await}
+  {/snippet}
+</Elements>
+```
+
+`confirmBancontactPayment` and `getRedirectResult` are **built-in exports** (thin wrappers over the
+Stripe SDK, mirroring `confirmCardPayment`). Each helper takes `{ billingDetails?, returnUrl }`. iDEAL,
+giropay and Przelewy24 follow the identical shape — `confirm{Ideal,Giropay,P24}Payment` +
+`<Stripe{Ideal,Giropay,P24}>` (P24 also collects an `email`; iDEAL accepts an optional `bank`, otherwise
+the shopper picks it on the redirect page). Set `showFields={false}` on any of these components to render
+no input and supply the billing details yourself.
+
+**Webhook** — the source of truth for fulfillment (the redirect can be closed or lost; the
+webhook can't). See [Verifying webhooks](#verifying-webhooks):
+
+```ts
+if (event.type === 'payment_intent.succeeded') {
+  const intent = event.data.object      // fulfill: mark order paid, etc.
+}
+```
+
+## Display / poll methods (BLIK, PromptPay, OXXO)
+
+These don't redirect — after confirm the shopper acts (enters a code, scans a QR, pays at a store), so the
+component **owns the flow**: it confirms, then polls (`pollPaymentIntent`) or displays a voucher, exposing
+a reactive `status` + `oncomplete`/`onerror`. Wire your own submit button to its `pay()` via `bind:this`:
+
+```svelte
+<script lang="ts">
+  import { Elements, StripeBlik } from 'sveltekit-stripe'
+  import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+  let el: ReturnType<typeof StripeBlik>
+</script>
+
+<Elements publicKey={PUBLIC_STRIPE_KEY}>
+  {#snippet children()}
+    <StripeBlik bind:this={el} clientSecret={cs} oncomplete={() => goto('/thank-you')} onerror={(e) => alert(e.message)} />
+    <button onclick={() => el.pay()}>Pay with BLIK</button>
+  {/snippet}
+</Elements>
+```
+
+- **BLIK** — renders a 6-digit code input; `pay()` confirms then polls until paid.
+- **PromptPay** — `pay()` confirms, renders Stripe's QR, polls until paid.
+- **OXXO** — `pay()` confirms, renders the voucher link; payment is offline (a webhook completes it), so
+  `status` ends at `voucher_issued`. Pass `billingName` + `billingEmail` (Stripe requires both).
+
+The low-level `confirm{Blik,PromptPay,Oxxo}Payment` + `pollPaymentIntent` helpers are exported too, for
+fully custom UIs.
+
 ## Obtaining a Client Secret
 
 Each time a user begins checkout, a payment intent needs to be generated. The payment intent contains a client secret that must be passed to the client. A valid client secret must be passed to the Address and Payment components, or they will not render.

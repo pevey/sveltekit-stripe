@@ -15,6 +15,13 @@ export { default as CheckoutShippingAddress } from './CheckoutShippingAddress.sv
 export { default as CheckoutExpressCheckout } from './CheckoutExpressCheckout.svelte'
 export { default as CheckoutContactDetails } from './CheckoutContactDetails.svelte'
 export { default as CurrencySelector } from './CurrencySelector.svelte'
+export { default as StripeIdeal } from './StripeIdeal.svelte'
+export { default as StripeBancontact } from './StripeBancontact.svelte'
+export { default as StripeGiropay } from './StripeGiropay.svelte'
+export { default as StripeP24 } from './StripeP24.svelte'
+export { default as StripeBlik } from './StripeBlik.svelte'
+export { default as StripePromptPay } from './StripePromptPay.svelte'
+export { default as StripeOxxo } from './StripeOxxo.svelte'
 export { getStripeContext } from './context.js'
 export { getCheckoutContext } from './checkout-context.js'
 export { loadCheckoutActions } from './checkout-actions.js'
@@ -25,6 +32,20 @@ export {
 	confirmCardSetup,
 	createCardPaymentMethod
 } from './confirm.js'
+export { getRedirectResult } from './redirect.js'
+export {
+	pollPaymentIntent,
+	confirmIdealPayment,
+	confirmBancontactPayment,
+	confirmGiropayPayment,
+	confirmP24Payment,
+	confirmBlikPayment,
+	confirmPromptPayPayment,
+	confirmOxxoPayment
+} from './payment-methods.js'
+export type { PollOptions, PollResult, RedirectConfirmOptions } from './payment-methods.js'
+export { canMakePayment } from './payment-request.js'
+export type { PaymentRequest, PaymentRequestOptions, CanMakePaymentResult } from '@stripe/stripe-js'
 export type {
 	StripeContext,
 	CheckoutContext,

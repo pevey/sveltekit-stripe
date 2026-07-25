@@ -21,21 +21,21 @@
 	let checkout = $derived(ctx.checkout)
 
 	const payment: Attachment<HTMLElement> = (node) => {
+		let el: typeof element = undefined
 		try {
-			element = ctx.checkout?.createPaymentElement(paymentOptions)
-			element?.mount(node)
-			element?.on('change', (e) => onChange?.(e))
-			element?.on('ready', () => onReady?.())
-			element?.on('focus', () => onFocus?.())
-			element?.on('blur', () => onBlur?.())
-			element?.on('escape', () => onEscape?.())
-			element?.on('loaderror', (e) => onLoadError?.(e.error))
+			el = ctx.checkout?.createPaymentElement(paymentOptions)
+			element = el
+			el?.mount(node)
+			el?.on('change', (e) => onChange?.(e))
+			el?.on('ready', () => onReady?.())
+			el?.on('focus', () => onFocus?.())
+			el?.on('blur', () => onBlur?.())
+			el?.on('escape', () => onEscape?.())
+			el?.on('loaderror', (e) => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}
-		return () => {
-			if (element) element.destroy()
-		}
+		return () => el?.destroy()
 	}
 </script>
 
