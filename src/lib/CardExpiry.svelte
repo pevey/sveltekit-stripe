@@ -1,9 +1,5 @@
 <script lang="ts">
-	import type {
-		StripeCardExpiryElement,
-		StripeCardExpiryElementOptions,
-		StripeCardExpiryElementChangeEvent
-	} from '@stripe/stripe-js'
+	import type { StripeCardExpiryElement, StripeCardExpiryElementOptions, StripeCardExpiryElementChangeEvent } from '@stripe/stripe-js'
 	import type { Attachment } from 'svelte/attachments'
 	import { dev } from '$app/env'
 	import { getStripeContext } from './context.js'
@@ -19,26 +15,18 @@
 		onEscape?: () => void
 	}
 
-	let {
-		cardExpiryOptions,
-		element = $bindable(),
-		onChange,
-		onReady,
-		onFocus,
-		onBlur,
-		onEscape
-	}: Props = $props()
+	let { cardExpiryOptions, element = $bindable(), onChange, onReady, onFocus, onBlur, onEscape }: Props = $props()
 
 	const ctx = getStripeContext()
 	let elements = $derived(ctx.elements)
 
-	const cardExpiry: Attachment<HTMLElement> = (node) => {
+	const cardExpiry: Attachment<HTMLElement> = node => {
 		let el: typeof element = undefined
 		try {
 			el = ctx.elements?.create('cardExpiry', cardExpiryOptions)
 			element = el // write-only — never READ `element` inside this attachment (avoids the self-loop)
 			el?.mount(node)
-			el?.on('change', (e) => onChange?.(e))
+			el?.on('change', e => onChange?.(e))
 			el?.on('ready', () => onReady?.())
 			el?.on('focus', () => onFocus?.())
 			el?.on('blur', () => onBlur?.())

@@ -12,9 +12,7 @@ export const STRIPE_KEY: symbol = Symbol('sveltekit-stripe')
 export function getStripeContext(): StripeContext {
 	const ctx = getContext<StripeContext | undefined>(STRIPE_KEY)
 	if (!ctx) {
-		throw new Error(
-			'getStripeContext() must be used within an <Elements> component from sveltekit-stripe.'
-		)
+		throw new Error('getStripeContext() must be used within an <Elements> component from sveltekit-stripe.')
 	}
 	return ctx
 }

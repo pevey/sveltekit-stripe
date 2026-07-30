@@ -11,9 +11,7 @@ export const CHECKOUT_KEY: symbol = Symbol('sveltekit-stripe-checkout')
 export function getCheckoutContext(): CheckoutContext {
 	const ctx = getContext<CheckoutContext | undefined>(CHECKOUT_KEY)
 	if (!ctx) {
-		throw new Error(
-			'getCheckoutContext() must be used within a <CheckoutProvider> component from sveltekit-stripe.'
-		)
+		throw new Error('getCheckoutContext() must be used within a <CheckoutProvider> component from sveltekit-stripe.')
 	}
 	return ctx
 }

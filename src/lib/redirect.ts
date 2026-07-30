@@ -7,9 +7,10 @@ import type { Stripe, PaymentIntent } from '@stripe/stripe-js'
  * PaymentIntent and returns its status. Returns `{ status: 'idle' }` when there is no redirect param
  * (or on the server), so a return page can render neutrally until it has something to report.
  */
-export async function getRedirectResult(
-	stripe: Stripe | null | undefined
-): Promise<{ status: PaymentIntent['status'] | 'idle' | 'unknown'; paymentIntent?: PaymentIntent }> {
+export async function getRedirectResult(stripe: Stripe | null | undefined): Promise<{
+	status: PaymentIntent['status'] | 'idle' | 'unknown'
+	paymentIntent?: PaymentIntent
+}> {
 	if (typeof window === 'undefined' || !stripe) return { status: 'idle' }
 	const clientSecret = new URLSearchParams(window.location.search).get('payment_intent_client_secret')
 	if (!clientSecret) return { status: 'idle' }

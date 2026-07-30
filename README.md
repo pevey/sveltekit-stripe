@@ -61,11 +61,13 @@ The recommended pattern binds `stripe` and `elements` out of `<Elements>` and co
 </script>
 
 <Elements publicKey={PUBLIC_STRIPE_KEY} elementsOptions={{ clientSecret }} bind:stripe bind:elements>
-	<form onsubmit={async (e) => {
-		e.preventDefault()
-		const { error } = await stripe.confirmPayment({ elements, clientSecret, confirmParams: { return_url }, redirect: 'if_required' })
-		if (error) console.log(error)
-	}}>
+	<form
+		onsubmit={async e => {
+			e.preventDefault()
+			const { error } = await stripe.confirmPayment({ elements, clientSecret, confirmParams: { return_url }, redirect: 'if_required' })
+			if (error) console.log(error)
+		}}
+	>
 		<PaymentElement />
 		<button type="submit">Pay</button>
 	</form>
@@ -102,7 +104,7 @@ The return_url below will be called after Stripe has processed the payment. The 
 
 	const elementsOptions: StripeElementsOptions = {
 		appearance: {
-			theme: 'stripe',
+			theme: 'stripe'
 		},
 		mode: 'payment',
 		currency: 'usd',
@@ -112,31 +114,34 @@ The return_url below will be called after Stripe has processed the payment. The 
 
 <Elements publicKey={PUBLIC_STRIPE_KEY} {elementsOptions}>
 	{#snippet children({ stripe, elements })}
-	<form method="POST" use:enhance={ async ({ cancel }) => {
-		let stripeResponse = await elements?.submit()
-		// console.log(stripeResponse)
-		if (stripeResponse && !stripeResponse.error) {
-			let stripeResponse = await stripe.confirmPayment({
-				elements,
-				clientSecret,
-				confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
-			})
-			// console.log(stripeResponse)
-			if (stripeResponse.error) {
-				console.log(stripeResponse.error)
-				cancel()
-			}
-		}
-		return async ({ result }) => {
-			// If we get here instead of being redirected to the url set above,
-			// we know that something went wrong.
-			errorMessage = stripeResponse?.error?.message
-			processing = false
-		}
-	}}>
-		<PaymentElement />
-		<button type="submit">Place Your Order</button>
-	</form>
+		<form
+			method="POST"
+			use:enhance={async ({ cancel }) => {
+				let stripeResponse = await elements?.submit()
+				// console.log(stripeResponse)
+				if (stripeResponse && !stripeResponse.error) {
+					let stripeResponse = await stripe.confirmPayment({
+						elements,
+						clientSecret,
+						confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
+					})
+					// console.log(stripeResponse)
+					if (stripeResponse.error) {
+						console.log(stripeResponse.error)
+						cancel()
+					}
+				}
+				return async ({ result }) => {
+					// If we get here instead of being redirected to the url set above,
+					// we know that something went wrong.
+					errorMessage = stripeResponse?.error?.message
+					processing = false
+				}
+			}}
+		>
+			<PaymentElement />
+			<button type="submit">Place Your Order</button>
+		</form>
 	{/snippet}
 </Elements>
 ```
@@ -158,22 +163,25 @@ One way to use the Address component is to bind the container. Once we have a bi
 
 <Elements publicKey={PUBLIC_STRIPE_KEY} {elementsOptions}>
 	{#snippet children({ stripe, elements })}
-	<form method="POST" use:enhance={ async ({ cancel }) => {
-		const {complete, value} = await addressContainer.getValue()
-		if (complete) {
-			// save the address somewhere
-			console.log(value)
-		} //else {
-			// You can choose to handle the error yourself (e.g., show an error message)
-			// Or you can just continue the submission and Stripe will handle the error
-		//}
+		<form
+			method="POST"
+			use:enhance={async ({ cancel }) => {
+				const { complete, value } = await addressContainer.getValue()
+				if (complete) {
+					// save the address somewhere
+					console.log(value)
+				} //else {
+				// You can choose to handle the error yourself (e.g., show an error message)
+				// Or you can just continue the submission and Stripe will handle the error
+				//}
 
-		// ...submit to Stripe as in example above
-	}}>
-		<AddressElement {addressElementOptions} bind:addressContainer />
-		<PaymentElement />
-		<button type="submit">Place Your Order</button>
-	</form>
+				// ...submit to Stripe as in example above
+			}}
+		>
+			<AddressElement {addressElementOptions} bind:addressContainer />
+			<PaymentElement />
+			<button type="submit">Place Your Order</button>
+		</form>
 	{/snippet}
 </Elements>
 ```
@@ -183,7 +191,8 @@ One way to use the Address component is to bind the container. Once we have a bi
 One downside of the above is that it only gets the value when the entire form is submitted. This may not be suitable for some checkout flows. The Stripe-provided change event can be surfaced via the `onChange` callback prop, but this is not usually what we want. You still have to check each time to see if the form element is complete. For convenience, this package provides an `onComplete` callback prop that fires with any change that constitutes a full, valid address (it receives the address value directly).
 
 ```svelte
-<AddressElement onComplete={async (value) => {
+<AddressElement
+	onComplete={async value => {
 		console.log(value)
 		// we have an address we can do something with
 		// for instance, get shipping/payment options
@@ -205,24 +214,21 @@ You can render the Payment Element before creating a PaymentIntent by passing `m
 	let elements = $state()
 </script>
 
-<Elements
-	publicKey={PUBLIC_STRIPE_KEY}
-	elementsOptions={{ mode: 'payment', amount: 1099, currency: 'usd' }}
-	bind:stripe
-	bind:elements
->
-	<form onsubmit={async (e) => {
-		e.preventDefault()
-		const { error: submitError } = await elements.submit()
-		if (submitError) return
-		const clientSecret = await fetchClientSecretFromServer()
-		const { error } = await stripe.confirmPayment({
-			elements,
-			clientSecret,
-			confirmParams: { return_url }
-		})
-		if (error) console.log(error)
-	}}>
+<Elements publicKey={PUBLIC_STRIPE_KEY} elementsOptions={{ mode: 'payment', amount: 1099, currency: 'usd' }} bind:stripe bind:elements>
+	<form
+		onsubmit={async e => {
+			e.preventDefault()
+			const { error: submitError } = await elements.submit()
+			if (submitError) return
+			const clientSecret = await fetchClientSecretFromServer()
+			const { error } = await stripe.confirmPayment({
+				elements,
+				clientSecret,
+				confirmParams: { return_url }
+			})
+			if (error) console.log(error)
+		}}
+	>
 		<PaymentElement />
 		<button type="submit">Pay</button>
 	</form>
@@ -268,13 +274,15 @@ three together automatically.
 </script>
 
 <Elements publicKey={PUBLIC_STRIPE_KEY} bind:stripe bind:elements>
-	<form onsubmit={async (e) => {
-		e.preventDefault()
-		const { error, paymentIntent } = await confirmCardPayment(stripe, elements, clientSecret, {
-			payment_method: { billing_details: { name } }
-		})
-		if (error) console.log(error)
-	}}>
+	<form
+		onsubmit={async e => {
+			e.preventDefault()
+			const { error, paymentIntent } = await confirmCardPayment(stripe, elements, clientSecret, {
+				payment_method: { billing_details: { name } }
+			})
+			if (error) console.log(error)
+		}}
+	>
 		<label>Card number</label>
 		<div class="field"><CardNumber cardNumberOptions={{ style }} /></div>
 
@@ -332,12 +340,7 @@ PayPal, …). It needs an `<Elements>` group created with `mode`/`amount`/`curre
 	let elements = $state()
 </script>
 
-<Elements
-	publicKey={PUBLIC_STRIPE_KEY}
-	elementsOptions={{ mode: 'payment', amount: 1099, currency: 'usd' }}
-	bind:stripe
-	bind:elements
->
+<Elements publicKey={PUBLIC_STRIPE_KEY} elementsOptions={{ mode: 'payment', amount: 1099, currency: 'usd' }} bind:stripe bind:elements>
 	<ExpressCheckout
 		onConfirm={async () => {
 			const clientSecret = await fetchClientSecretFromServer()
@@ -359,10 +362,7 @@ Collects the customer's email and drives Link autofill. Pre-fill a logged-in cus
 	let { data } = $props() // e.g. { user: { email } } from your load function
 </script>
 
-<ContactDetails
-	contactDetailsOptions={{ defaultValues: { email: data.user?.email } }}
-	onComplete={(value) => console.log('email', value.email)}
-/>
+<ContactDetails contactDetailsOptions={{ defaultValues: { email: data.user?.email } }} onComplete={value => console.log('email', value.email)} />
 ```
 
 ### Payment Method Messaging (BNPL promo)
@@ -415,12 +415,12 @@ import { STRIPE_SECRET_KEY } from '$env/static/private'
 const stripe = new Stripe(STRIPE_SECRET_KEY)
 
 export const createBancontactIntent = command(async ({ amount }: { amount: number }) => {
-  const intent = await stripe.paymentIntents.create({
-    amount,                              // minor units, e.g. 1999 = €19.99
-    currency: 'eur',
-    payment_method_types: ['bancontact']
-  })
-  return { clientSecret: intent.client_secret! }
+	const intent = await stripe.paymentIntents.create({
+		amount, // minor units, e.g. 1999 = €19.99
+		currency: 'eur',
+		payment_method_types: ['bancontact']
+	})
+	return { clientSecret: intent.client_secret! }
 })
 ```
 
@@ -429,26 +429,28 @@ instance; Bancontact renders nothing but a name field:
 
 ```svelte
 <script lang="ts">
-  import { Elements, StripeBancontact, getStripeContext, confirmBancontactPayment } from 'sveltekit-stripe'
-  import { createBancontactIntent } from '$lib/payment.remote'
-  import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	import { Elements, StripeBancontact, getStripeContext, confirmBancontactPayment } from 'sveltekit-stripe'
+	import { createBancontactIntent } from '$lib/payment.remote'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
 
-  let name = $state('')
+	let name = $state('')
 </script>
 
 <Elements publicKey={PUBLIC_STRIPE_KEY}>
-  {#snippet children()}
-    {@const ctx = getStripeContext()}
-    <StripeBancontact bind:name />
-    <button onclick={async () => {
-      const { clientSecret } = await createBancontactIntent({ amount: 1999 })
-      const { error } = await confirmBancontactPayment(ctx.stripe, clientSecret, {
-        billingDetails: { name },
-        returnUrl: `${location.origin}/checkout/return`
-      })
-      if (error) console.error(error.message)   // on success the browser redirects to the bank
-    }}>Pay with Bancontact</button>
-  {/snippet}
+	{#snippet children()}
+		{@const ctx = getStripeContext()}
+		<StripeBancontact bind:name />
+		<button
+			onclick={async () => {
+				const { clientSecret } = await createBancontactIntent({ amount: 1999 })
+				const { error } = await confirmBancontactPayment(ctx.stripe, clientSecret, {
+					billingDetails: { name },
+					returnUrl: `${location.origin}/checkout/return`
+				})
+				if (error) console.error(error.message) // on success the browser redirects to the bank
+			}}>Pay with Bancontact</button
+		>
+	{/snippet}
 </Elements>
 ```
 
@@ -456,20 +458,23 @@ instance; Bancontact renders nothing but a name field:
 
 ```svelte
 <script lang="ts">
-  import { Elements, getStripeContext, getRedirectResult } from 'sveltekit-stripe'
-  import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	import { Elements, getStripeContext, getRedirectResult } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
 </script>
 
 <Elements publicKey={PUBLIC_STRIPE_KEY}>
-  {#snippet children()}
-    {@const ctx = getStripeContext()}
-    {#await getRedirectResult(ctx.stripe) then { status }}
-      {#if status === 'succeeded'}       Payment complete ✅
-      {:else if status === 'processing'} Processing…
-      {:else}                            Payment failed ❌
-      {/if}
-    {/await}
-  {/snippet}
+	{#snippet children()}
+		{@const ctx = getStripeContext()}
+		{#await getRedirectResult(ctx.stripe) then { status }}
+			{#if status === 'succeeded'}
+				Payment complete ✅
+			{:else if status === 'processing'}
+				Processing…
+			{:else}
+				Payment failed ❌
+			{/if}
+		{/await}
+	{/snippet}
 </Elements>
 ```
 
@@ -485,7 +490,7 @@ webhook can't). See [Verifying webhooks](#verifying-webhooks):
 
 ```ts
 if (event.type === 'payment_intent.succeeded') {
-  const intent = event.data.object      // fulfill: mark order paid, etc.
+	const intent = event.data.object // fulfill: mark order paid, etc.
 }
 ```
 
@@ -497,16 +502,16 @@ a reactive `status` + `oncomplete`/`onerror`. Wire your own submit button to its
 
 ```svelte
 <script lang="ts">
-  import { Elements, StripeBlik } from 'sveltekit-stripe'
-  import { PUBLIC_STRIPE_KEY } from '$env/static/public'
-  let el: ReturnType<typeof StripeBlik>
+	import { Elements, StripeBlik } from 'sveltekit-stripe'
+	import { PUBLIC_STRIPE_KEY } from '$env/static/public'
+	let el: ReturnType<typeof StripeBlik>
 </script>
 
 <Elements publicKey={PUBLIC_STRIPE_KEY}>
-  {#snippet children()}
-    <StripeBlik bind:this={el} clientSecret={cs} oncomplete={() => goto('/thank-you')} onerror={(e) => alert(e.message)} />
-    <button onclick={() => el.pay()}>Pay with BLIK</button>
-  {/snippet}
+	{#snippet children()}
+		<StripeBlik bind:this={el} clientSecret={cs} oncomplete={() => goto('/thank-you')} onerror={e => alert(e.message)} />
+		<button onclick={() => el.pay()}>Pay with BLIK</button>
+	{/snippet}
 </Elements>
 ```
 
@@ -601,38 +606,45 @@ Or, you can take advantage of the relatively new ability in Stripe to produce Pa
 
 <Elements publicKey={PUBLIC_STRIPE_KEY} {elementsOptions}>
 	{#snippet children({ stripe, elements })}
-	<form method="POST" use:enhance={ async ({ cancel }) => {
-		let stripeResponse = await elements?.submit()
-		// get the client secret here before final submission of payment
-		const { clientSecret } = await fetch('/checkout/turnstile', {
-			method: 'POST',
-			body: JSON.stringify({ token })
-		}).then(res => res.json()).catch(e => console.log(e))
+		<form
+			method="POST"
+			use:enhance={async ({ cancel }) => {
+				let stripeResponse = await elements?.submit()
+				// get the client secret here before final submission of payment
+				const { clientSecret } = await fetch('/checkout/turnstile', {
+					method: 'POST',
+					body: JSON.stringify({ token })
+				})
+					.then(res => res.json())
+					.catch(e => console.log(e))
 
-		if (stripeResponse && !stripeResponse.error) {
-			let stripeResponse = await stripe.confirmPayment({
-				elements,
-				clientSecret,
-				confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
-			})
-			if (stripeResponse.error) {
-				console.log(stripeResponse.error)
-				cancel()
-			}
-		}
-		return async ({ result }) => {
-			// If we get here instead of being redirected to the url set above,
-			// we know that something went wrong.
-			errorMessage = stripeResponse?.error?.message
-			processing = false
-		}
-	}}>
-		<AddressElement onComplete={ async (value) => {
-			console.log(value.firstName, value.lastName, value.address)
-		}}/>
-		<PaymentElement />
-		<button type="submit">Place Your Order</button>
-	</form>
+				if (stripeResponse && !stripeResponse.error) {
+					let stripeResponse = await stripe.confirmPayment({
+						elements,
+						clientSecret,
+						confirmParams: { return_url: `https://example.com/order/success/${exampleOrderCode}` }
+					})
+					if (stripeResponse.error) {
+						console.log(stripeResponse.error)
+						cancel()
+					}
+				}
+				return async ({ result }) => {
+					// If we get here instead of being redirected to the url set above,
+					// we know that something went wrong.
+					errorMessage = stripeResponse?.error?.message
+					processing = false
+				}
+			}}
+		>
+			<AddressElement
+				onComplete={async value => {
+					console.log(value.firstName, value.lastName, value.address)
+				}}
+			/>
+			<PaymentElement />
+			<button type="submit">Place Your Order</button>
+		</form>
 	{/snippet}
 </Elements>
 ```
@@ -654,8 +666,7 @@ import { error, json } from '@sveltejs/kit'
 
 export async function POST({ request }) {
 	const data = await request.json()
-	if (!(await validateToken(data.token, SECRET_TURNSTILE_KEY)))
-		throw error(400, { message: 'Bot risk' })
+	if (!(await validateToken(data.token, SECRET_TURNSTILE_KEY))) throw error(400, { message: 'Bot risk' })
 	// some sort of validation on data
 	const clientSecret = await generateClientSecret() // example function
 	return json(clientSecret)
@@ -730,12 +741,14 @@ Wrap your checkout-mode elements in `<CheckoutProvider>` (session created with
 </script>
 
 <CheckoutProvider publicKey={PUBLIC_STRIPE_KEY} clientSecret={data.clientSecret} bind:checkout>
-	<form onsubmit={async (e) => {
-		e.preventDefault()
-		const actions = await loadCheckoutActions(checkout)
-		const result = await actions.confirm({ returnUrl: 'https://example.com/return' })
-		if (result.type === 'error') console.log(result.error)
-	}}>
+	<form
+		onsubmit={async e => {
+			e.preventDefault()
+			const actions = await loadCheckoutActions(checkout)
+			const result = await actions.confirm({ returnUrl: 'https://example.com/return' })
+			if (result.type === 'error') console.log(result.error)
+		}}
+	>
 		<CurrencySelector />
 		<CheckoutPayment />
 		<button type="submit">Pay</button>
@@ -912,8 +925,7 @@ export default addressElementOptions: StripeAddressElementOptions = {
 `+page.svelte`
 
 ```svelte
-import addressElementOptions from './addressElementOptions'
-...
+import addressElementOptions from './addressElementOptions' ...
 ```
 
 ## Customizing the Elements

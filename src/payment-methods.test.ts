@@ -25,7 +25,9 @@ describe('pollPaymentIntent', () => {
 
 	it('stops on a terminal failure status', async () => {
 		const stripe = {
-			retrievePaymentIntent: vi.fn(async () => ({ paymentIntent: { status: 'requires_payment_method' } }))
+			retrievePaymentIntent: vi.fn(async () => ({
+				paymentIntent: { status: 'requires_payment_method' }
+			}))
 		} as any
 		const res = await pollPaymentIntent(stripe, 'cs_1', { sleep: noSleep })
 		expect(res.status).toBe('requires_payment_method')
@@ -142,15 +144,7 @@ describe('display/poll confirm helpers', () => {
 		} as any
 		await confirmPromptPayPayment(stripe, 'cs_1', { billingDetails: { name: 'Ada' } })
 		await confirmOxxoPayment(stripe, 'cs_1', { billingDetails: { name: 'Ada', email: 'a@b.co' } })
-		expect(stripe.confirmPromptPayPayment).toHaveBeenCalledWith(
-			'cs_1',
-			{ payment_method: { billing_details: { name: 'Ada' } } },
-			undefined
-		)
-		expect(stripe.confirmOxxoPayment).toHaveBeenCalledWith(
-			'cs_1',
-			{ payment_method: { billing_details: { name: 'Ada', email: 'a@b.co' } } },
-			undefined
-		)
+		expect(stripe.confirmPromptPayPayment).toHaveBeenCalledWith('cs_1', { payment_method: { billing_details: { name: 'Ada' } } }, undefined)
+		expect(stripe.confirmOxxoPayment).toHaveBeenCalledWith('cs_1', { payment_method: { billing_details: { name: 'Ada', email: 'a@b.co' } } }, undefined)
 	})
 })

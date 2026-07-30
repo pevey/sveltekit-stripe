@@ -19,7 +19,7 @@
 	const ctx = getCheckoutContext()
 	let checkout = $derived(ctx.checkout)
 
-	const currencySelector: Attachment<HTMLElement> = (node) => {
+	const currencySelector: Attachment<HTMLElement> = node => {
 		let el: typeof element = undefined
 		try {
 			el = ctx.checkout?.createCurrencySelectorElement()
@@ -29,7 +29,7 @@
 			el?.on('focus', () => onFocus?.())
 			el?.on('blur', () => onBlur?.())
 			el?.on('escape', () => onEscape?.())
-			el?.on('loaderror', (e) => onLoadError?.(e.error))
+			el?.on('loaderror', e => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}

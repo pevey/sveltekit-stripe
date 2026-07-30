@@ -20,18 +20,18 @@
 	const ctx = getCheckoutContext()
 	let checkout = $derived(ctx.checkout)
 
-	const shippingAddress: Attachment<HTMLElement> = (node) => {
+	const shippingAddress: Attachment<HTMLElement> = node => {
 		let el: typeof element = undefined
 		try {
 			el = ctx.checkout?.createShippingAddressElement(addressOptions)
 			element = el
 			el?.mount(node)
-			el?.on('change', (e) => onChange?.(e))
+			el?.on('change', e => onChange?.(e))
 			el?.on('ready', () => onReady?.())
 			el?.on('focus', () => onFocus?.())
 			el?.on('blur', () => onBlur?.())
 			el?.on('escape', () => onEscape?.())
-			el?.on('loaderror', (e) => onLoadError?.(e.error))
+			el?.on('loaderror', e => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}

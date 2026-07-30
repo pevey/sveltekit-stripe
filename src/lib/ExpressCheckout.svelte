@@ -51,23 +51,23 @@
 	const ctx = getStripeContext()
 	let elements = $derived(ctx.elements)
 
-	const expressCheckout: Attachment<HTMLElement> = (node) => {
+	const expressCheckout: Attachment<HTMLElement> = node => {
 		let el: typeof element = undefined
 		try {
 			el = ctx.elements?.create('expressCheckout', expressCheckoutOptions)
 			element = el
 			el?.mount(node)
-			el?.on('ready', (e) => onReady?.(e))
-			el?.on('confirm', (e) => onConfirm?.(e))
-			el?.on('click', (e) => onClick?.(e))
+			el?.on('ready', e => onReady?.(e))
+			el?.on('confirm', e => onConfirm?.(e))
+			el?.on('click', e => onClick?.(e))
 			el?.on('cancel', () => onCancel?.())
-			el?.on('shippingaddresschange', (e) => onShippingAddressChange?.(e))
-			el?.on('shippingratechange', (e) => onShippingRateChange?.(e))
-			el?.on('availablepaymentmethodschange', (e) => onAvailablePaymentMethodsChange?.(e))
+			el?.on('shippingaddresschange', e => onShippingAddressChange?.(e))
+			el?.on('shippingratechange', e => onShippingRateChange?.(e))
+			el?.on('availablepaymentmethodschange', e => onAvailablePaymentMethodsChange?.(e))
 			el?.on('focus', () => onFocus?.())
 			el?.on('blur', () => onBlur?.())
 			el?.on('escape', () => onEscape?.())
-			el?.on('loaderror', (e) => onLoadError?.(e.error))
+			el?.on('loaderror', e => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}

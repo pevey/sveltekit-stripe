@@ -1,19 +1,10 @@
-import type {
-	Stripe,
-	PaymentIntent,
-	PaymentIntentResult,
-	PaymentMethodCreateParams
-} from '@stripe/stripe-js'
+import type { Stripe, PaymentIntent, PaymentIntentResult, PaymentMethodCreateParams } from '@stripe/stripe-js'
 
 // ---------------------------------------------------------------------------
 // Poll helper (BLIK / PromptPay — the shopper acts async, so poll to resolution)
 // ---------------------------------------------------------------------------
 
-const TERMINAL = new Set<PaymentIntent['status']>([
-	'succeeded',
-	'canceled',
-	'requires_payment_method'
-])
+const TERMINAL = new Set<PaymentIntent['status']>(['succeeded', 'canceled', 'requires_payment_method'])
 
 export interface PollOptions {
 	intervalMs?: number
@@ -31,22 +22,22 @@ export interface PollResult {
 }
 
 /** Poll `retrievePaymentIntent` until the intent is terminal or the timeout elapses. */
-export async function pollPaymentIntent(
-	stripe: Stripe,
-	clientSecret: string,
-	opts: PollOptions = {}
-): Promise<PollResult> {
+export async function pollPaymentIntent(stripe: Stripe, clientSecret: string, opts: PollOptions = {}): Promise<PollResult> {
 	const intervalMs = opts.intervalMs ?? 2000
 	const timeoutMs = opts.timeoutMs ?? 180000
 	const now = opts.now ?? Date.now
-	const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)))
+	const sleep = opts.sleep ?? ((ms: number) => new Promise<void>(r => setTimeout(r, ms)))
 	const start = now()
 	for (;;) {
 		const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret)
 		const status = paymentIntent?.status
 		if (status && TERMINAL.has(status)) return { status, paymentIntent }
 		if (now() - start >= timeoutMs)
-			return { status: status ?? 'unknown', paymentIntent: paymentIntent ?? undefined, timedOut: true }
+			return {
+				status: status ?? 'unknown',
+				paymentIntent: paymentIntent ?? undefined,
+				timedOut: true
+			}
 		await sleep(intervalMs)
 	}
 }
@@ -82,11 +73,7 @@ export function confirmIdealPayment(
 		...(opts.bank ? { ideal: { bank: opts.bank } } : {}),
 		...billingPm(opts.billingDetails)
 	}
-	return stripe.confirmIdealPayment(
-		clientSecret,
-		{ payment_method, return_url: opts.returnUrl },
-		options
-	)
+	return stripe.confirmIdealPayment(clientSecret, { payment_method, return_url: opts.returnUrl }, options)
 }
 
 /** Bancontact — redirects to the shopper's bank. */
@@ -96,11 +83,7 @@ export function confirmBancontactPayment(
 	opts: RedirectConfirmOptions,
 	options?: Parameters<Stripe['confirmBancontactPayment']>[2]
 ): Promise<PaymentIntentResult> {
-	return stripe.confirmBancontactPayment(
-		clientSecret,
-		{ payment_method: billingPm(opts.billingDetails), return_url: opts.returnUrl },
-		options
-	)
+	return stripe.confirmBancontactPayment(clientSecret, { payment_method: billingPm(opts.billingDetails), return_url: opts.returnUrl }, options)
 }
 
 /** giropay — redirects to the shopper's bank. */
@@ -110,11 +93,7 @@ export function confirmGiropayPayment(
 	opts: RedirectConfirmOptions,
 	options?: Parameters<Stripe['confirmGiropayPayment']>[2]
 ): Promise<PaymentIntentResult> {
-	return stripe.confirmGiropayPayment(
-		clientSecret,
-		{ payment_method: billingPm(opts.billingDetails), return_url: opts.returnUrl },
-		options
-	)
+	return stripe.confirmGiropayPayment(clientSecret, { payment_method: billingPm(opts.billingDetails), return_url: opts.returnUrl }, options)
 }
 
 /** Przelewy24 — redirects to the shopper's bank. Requires email + ToS acceptance (set for you). */
@@ -159,11 +138,7 @@ export function confirmPromptPayPayment(
 	opts: { billingDetails?: Billing } = {},
 	options?: Parameters<Stripe['confirmPromptPayPayment']>[2]
 ): Promise<PaymentIntentResult> {
-	return stripe.confirmPromptPayPayment(
-		clientSecret,
-		{ payment_method: billingPm(opts.billingDetails) },
-		options
-	)
+	return stripe.confirmPromptPayPayment(clientSecret, { payment_method: billingPm(opts.billingDetails) }, options)
 }
 
 /** OXXO — returns a voucher in the intent's `next_action` (display it; a webhook completes payment). */
@@ -173,9 +148,5 @@ export function confirmOxxoPayment(
 	opts: { billingDetails?: Billing } = {},
 	options?: Parameters<Stripe['confirmOxxoPayment']>[2]
 ): Promise<PaymentIntentResult> {
-	return stripe.confirmOxxoPayment(
-		clientSecret,
-		{ payment_method: billingPm(opts.billingDetails) },
-		options
-	)
+	return stripe.confirmOxxoPayment(clientSecret, { payment_method: billingPm(opts.billingDetails) }, options)
 }

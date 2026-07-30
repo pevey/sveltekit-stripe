@@ -15,15 +15,7 @@
 		onBlur?: (e: any) => void
 	}
 
-	let {
-		addressElementOptions,
-		addressContainer = $bindable(),
-		onChange,
-		onComplete,
-		onReady,
-		onFocus,
-		onBlur
-	}: Props = $props()
+	let { addressElementOptions, addressContainer = $bindable(), onChange, onComplete, onReady, onFocus, onBlur }: Props = $props()
 
 	const ctx = getStripeContext()
 	let elements = $derived(ctx.elements)
@@ -42,7 +34,7 @@
 		...addressElementOptions
 	})
 
-	const addressElement: Attachment<HTMLElement> = (node) => {
+	const addressElement: Attachment<HTMLElement> = node => {
 		// Drive mount/teardown from a LOCAL — assigning `addressContainer` is a write-only side effect.
 		// Reading the bindable back inside this attachment would make the effect depend on state it also
 		// writes, which loops immediately (`effect_update_depth_exceeded`).

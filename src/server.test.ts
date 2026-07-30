@@ -1,10 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import {
-	createStripeServer,
-	createPaymentIntent,
-	createSetupIntent,
-	constructWebhookEvent
-} from './lib/server/index.js'
+import { createStripeServer, createPaymentIntent, createSetupIntent, constructWebhookEvent } from './lib/server/index.js'
 
 function fakeStripe() {
 	return {

@@ -1,10 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import {
-	getCardElement,
-	confirmCardPayment,
-	confirmCardSetup,
-	createCardPaymentMethod
-} from './lib/confirm.js'
+import { getCardElement, confirmCardPayment, confirmCardSetup, createCardPaymentMethod } from './lib/confirm.js'
 
 const CARD = { id: 'card-el' }
 
@@ -25,13 +20,7 @@ describe('getCardElement', () => {
 describe('confirmCardPayment', () => {
 	it('injects the card element and merges data + options', async () => {
 		const stripe = { confirmCardPayment: vi.fn(async () => ({ paymentIntent: {} })) } as any
-		await confirmCardPayment(
-			stripe,
-			fakeElements(),
-			'cs_123',
-			{ payment_method: { billing_details: { name: 'Ada' } } },
-			{ handleActions: false }
-		)
+		await confirmCardPayment(stripe, fakeElements(), 'cs_123', { payment_method: { billing_details: { name: 'Ada' } } }, { handleActions: false })
 		expect(stripe.confirmCardPayment).toHaveBeenCalledWith(
 			'cs_123',
 			{ payment_method: { billing_details: { name: 'Ada' }, card: CARD } },
@@ -44,11 +33,7 @@ describe('confirmCardSetup', () => {
 	it('injects the card element into a setup confirmation', async () => {
 		const stripe = { confirmCardSetup: vi.fn(async () => ({ setupIntent: {} })) } as any
 		await confirmCardSetup(stripe, fakeElements(), 'seti_123')
-		expect(stripe.confirmCardSetup).toHaveBeenCalledWith(
-			'seti_123',
-			{ payment_method: { card: CARD } },
-			undefined
-		)
+		expect(stripe.confirmCardSetup).toHaveBeenCalledWith('seti_123', { payment_method: { card: CARD } }, undefined)
 	})
 })
 

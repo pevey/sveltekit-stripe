@@ -5,7 +5,9 @@ import { redirectToPaymentLink } from './lib/payment-links.js'
 describe('createPaymentLink', () => {
 	it('creates a link and returns its url', async () => {
 		const stripe = {
-			paymentLinks: { create: vi.fn(async () => ({ id: 'plink_1', url: 'https://buy.stripe.com/x' })) }
+			paymentLinks: {
+				create: vi.fn(async () => ({ id: 'plink_1', url: 'https://buy.stripe.com/x' }))
+			}
 		} as any
 		const params = { line_items: [{ price: 'price_1', quantity: 1 }] }
 		const result = await createPaymentLink(stripe, params as any, { idempotencyKey: 'k1' })

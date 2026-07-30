@@ -1,9 +1,4 @@
-import type {
-	Stripe,
-	StripeElements,
-	StripeCardNumberElement,
-	CreatePaymentMethodCardData
-} from '@stripe/stripe-js'
+import type { Stripe, StripeElements, StripeCardNumberElement, CreatePaymentMethodCardData } from '@stripe/stripe-js'
 
 type ConfirmPaymentArg = NonNullable<Parameters<Stripe['confirmCardPayment']>[1]>
 type ConfirmSetupArg = NonNullable<Parameters<Stripe['confirmCardSetup']>[1]>
@@ -24,9 +19,7 @@ type CardSetupData = Omit<ConfirmSetupArg, 'payment_method'> & {
 export function getCardElement(elements: StripeElements): StripeCardNumberElement {
 	const card = elements.getElement('cardNumber')
 	if (!card) {
-		throw new Error(
-			'sveltekit-stripe: no cardNumber element found — render <CardNumber> inside <Elements> before confirming.'
-		)
+		throw new Error('sveltekit-stripe: no cardNumber element found — render <CardNumber> inside <Elements> before confirming.')
 	}
 	return card
 }
@@ -70,11 +63,7 @@ export function confirmCardSetup(
  * Create a card PaymentMethod from the mounted card fields (e.g. to confirm server-side).
  * `data` carries `billing_details`, `metadata`, etc. — the `type`/`card` are injected.
  */
-export function createCardPaymentMethod(
-	stripe: Stripe,
-	elements: StripeElements,
-	data?: Omit<CreatePaymentMethodCardData, 'type' | 'card'>
-) {
+export function createCardPaymentMethod(stripe: Stripe, elements: StripeElements, data?: Omit<CreatePaymentMethodCardData, 'type' | 'card'>) {
 	const card = getCardElement(elements)
 	return stripe.createPaymentMethod({ type: 'card', card, ...data })
 }

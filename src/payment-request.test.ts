@@ -13,7 +13,9 @@ describe('canMakePayment', () => {
 	})
 
 	it('returns null when no wallet is available', async () => {
-		const stripe = { paymentRequest: vi.fn(() => ({ canMakePayment: vi.fn(async () => null) })) } as any
+		const stripe = {
+			paymentRequest: vi.fn(() => ({ canMakePayment: vi.fn(async () => null) }))
+		} as any
 		expect(await canMakePayment(stripe, OPTS)).toBeNull()
 	})
 })

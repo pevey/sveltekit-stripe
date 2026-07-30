@@ -10,15 +10,12 @@
 		paymentContainer?: StripePaymentElement
 	}
 
-	let {
-		paymentElementOptions = { layout: 'tabs' },
-		paymentContainer = $bindable()
-	}: Props = $props()
+	let { paymentElementOptions = { layout: 'tabs' }, paymentContainer = $bindable() }: Props = $props()
 
 	const ctx = getStripeContext()
 	let elements = $derived(ctx.elements)
 
-	const paymentElement: Attachment<HTMLElement> = (node) => {
+	const paymentElement: Attachment<HTMLElement> = node => {
 		// Local for mount/teardown; reading back the `$bindable` we write here would loop the effect
 		// (`effect_update_depth_exceeded`).
 		let el: StripePaymentElement | undefined

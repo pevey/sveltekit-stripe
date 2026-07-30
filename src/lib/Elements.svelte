@@ -15,13 +15,7 @@
 		children?: Snippet<[{ stripe: Stripe | null; elements: StripeElements | undefined }]>
 	}
 
-	let {
-		publicKey,
-		elementsOptions = undefined,
-		stripe = $bindable(),
-		elements = $bindable(),
-		children
-	}: Props = $props()
+	let { publicKey, elementsOptions = undefined, stripe = $bindable(), elements = $bindable(), children }: Props = $props()
 
 	// Reactive context shared with descendant Element components (Payment, Address,
 	// card fields). A $state object so children stay reactive once Stripe loads async.

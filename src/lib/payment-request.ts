@@ -11,9 +11,6 @@ import type { Stripe, PaymentRequestOptions, CanMakePaymentResult } from '@strip
  * recommended way to RENDER the button; the legacy PaymentRequestButton element is deprecated. This
  * helper is only the availability check, which remains fully supported.
  */
-export async function canMakePayment(
-	stripe: Stripe,
-	options: PaymentRequestOptions
-): Promise<CanMakePaymentResult | null> {
+export async function canMakePayment(stripe: Stripe, options: PaymentRequestOptions): Promise<CanMakePaymentResult | null> {
 	return stripe.paymentRequest(options).canMakePayment()
 }

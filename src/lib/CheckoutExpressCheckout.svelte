@@ -1,5 +1,10 @@
 <script lang="ts">
-	import type { StripeCheckoutExpressCheckoutElement, StripeCheckoutExpressCheckoutElementOptions, StripeExpressCheckoutElementConfirmEvent, StripeError } from '@stripe/stripe-js'
+	import type {
+		StripeCheckoutExpressCheckoutElement,
+		StripeCheckoutExpressCheckoutElementOptions,
+		StripeExpressCheckoutElementConfirmEvent,
+		StripeError
+	} from '@stripe/stripe-js'
 	import type { Attachment } from 'svelte/attachments'
 	import { dev } from '$app/env'
 	import { getCheckoutContext } from './checkout-context.js'
@@ -21,19 +26,19 @@
 	const ctx = getCheckoutContext()
 	let checkout = $derived(ctx.checkout)
 
-	const expressCheckout: Attachment<HTMLElement> = (node) => {
+	const expressCheckout: Attachment<HTMLElement> = node => {
 		let el: typeof element = undefined
 		try {
 			el = ctx.checkout?.createExpressCheckoutElement(expressCheckoutOptions)
 			element = el
 			el?.mount(node)
 			el?.on('ready', () => onReady?.())
-			el?.on('confirm', (e) => onConfirm?.(e))
+			el?.on('confirm', e => onConfirm?.(e))
 			el?.on('cancel', () => onCancel?.())
 			el?.on('focus', () => onFocus?.())
 			el?.on('blur', () => onBlur?.())
 			el?.on('escape', () => onEscape?.())
-			el?.on('loaderror', (e) => onLoadError?.(e.error))
+			el?.on('loaderror', e => onLoadError?.(e.error))
 		} catch (e) {
 			if (dev) console.error(e)
 		}

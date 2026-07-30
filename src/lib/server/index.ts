@@ -42,12 +42,7 @@ export async function createSetupIntent(
  * the `stripe-signature` header, and your endpoint's signing secret (`whsec_...`). Throws
  * `Stripe.errors.StripeSignatureVerificationError` when verification fails.
  */
-export function constructWebhookEvent(
-	stripe: Stripe,
-	payload: string | Buffer,
-	signature: string | Buffer | Array<string>,
-	secret: string
-): Stripe.Event {
+export function constructWebhookEvent(stripe: Stripe, payload: string | Buffer, signature: string | Buffer | Array<string>, secret: string): Stripe.Event {
 	return stripe.webhooks.constructEvent(payload, signature, secret)
 }
 
