@@ -666,7 +666,7 @@ import { error, json } from '@sveltejs/kit'
 
 export async function POST({ request }) {
 	const data = await request.json()
-	if (!(await validateToken(data.token, SECRET_TURNSTILE_KEY))) throw error(400, { message: 'Bot risk' })
+	if (!(await validateToken(data.token, SECRET_TURNSTILE_KEY))) throw error(400, 'Bot risk')
 	// some sort of validation on data
 	const clientSecret = await generateClientSecret() // example function
 	return json(clientSecret)
