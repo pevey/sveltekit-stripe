@@ -202,8 +202,7 @@ One downside of the above is that it only gets the value when the entire form is
 
 ## Deferred Intent (create the PaymentIntent at submit)
 
-You can render the Payment Element before creating a PaymentIntent by passing `mode`,
-`amount`, and `currency` instead of a `clientSecret`. Fetch the client secret at submit:
+You can render the Payment Element before creating a PaymentIntent by passing `mode`, `amount`, and `currency` instead of a `clientSecret`. Fetch the client secret at submit:
 
 ```svelte
 <script>
@@ -237,9 +236,7 @@ You can render the Payment Element before creating a PaymentIntent by passing `m
 
 ### Accessing `stripe` and `elements`
 
-Bind them out of `<Elements>` with `bind:stripe` / `bind:elements` (shown above) to use
-in your submit handler. Inside any descendant component you can also read the reactive
-context directly:
+Bind them out of `<Elements>` with `bind:stripe` / `bind:elements` (shown above) to use in your submit handler. Inside any descendant component you can also read the reactive context directly:
 
 ```svelte
 <script>
@@ -248,15 +245,11 @@ context directly:
 </script>
 ```
 
-> The module-level `stripeClient` / `stripeElements` stores and the `sveltekit-stripe/stores.js`
-> export were removed in v4 — use `bind:` or `getStripeContext()` instead.
+> The module-level `stripeClient` / `stripeElements` stores and the `sveltekit-stripe/stores.js` export were removed in v4 — use `bind:` or `getStripeContext()` instead.
 
 ## Card Fields (Hosted Fields style)
 
-For full control over your card form layout, use the individual `CardNumber`, `CardExpiry`,
-and `CardCvc` components — you place and style each one yourself. They render inside
-`<Elements>` (no `clientSecret` or `mode` needed for the card flow), and Stripe links the
-three together automatically.
+For full control over your card form layout, use the individual `CardNumber`, `CardExpiry`, and `CardCvc` components — you place and style each one yourself. They render inside `<Elements>` (no `clientSecret` or `mode` needed for the card flow), and Stripe links the three together automatically.
 
 ```svelte
 <script>
@@ -300,18 +293,14 @@ three together automatically.
 
 Notes:
 
-- These use Stripe's **classic card flow** (card-only; no `elements.submit()`). For wallets
-  and 100+ payment methods, use `<PaymentElement>` (the Payment Element) instead.
-- Only **one** of each field (`CardNumber`/`CardExpiry`/`CardCvc`) may be rendered per
-  `<Elements>`.
+- These use Stripe's **classic card flow** (card-only; no `elements.submit()`). For wallets and 100+ payment methods, use `<PaymentElement>` (the Payment Element) instead.
+- Only **one** of each field (`CardNumber`/`CardExpiry`/`CardCvc`) may be rendered per `<Elements>`.
 - There is no card postal-code element — collect it with a plain input or the Address element.
-- Each field exposes `onChange`/`onReady`/`onFocus`/`onBlur`/`onEscape` and a bindable
-  `element`. The `onChange` event carries `complete`, `error`, and (for `CardNumber`) `brand`.
+- Each field exposes `onChange`/`onReady`/`onFocus`/`onBlur`/`onEscape` and a bindable `element`. The `onChange` event carries `complete`, `error`, and (for `CardNumber`) `brand`.
 
 ### Confirm helpers
 
-`confirmCardPayment`, `confirmCardSetup`, and `createCardPaymentMethod` wrap Stripe's methods
-and inject the card element for you (via `elements.getElement('cardNumber')`):
+`confirmCardPayment`, `confirmCardSetup`, and `createCardPaymentMethod` wrap Stripe's methods and inject the card element for you (via `elements.getElement('cardNumber')`):
 
 ```svelte
 // checkout (PaymentIntent)
@@ -328,8 +317,7 @@ const { paymentMethod } = await createCardPaymentMethod(stripe, elements, { bill
 
 ### Express Checkout (wallet buttons)
 
-The Express Checkout Element shows one-click wallet buttons (Apple Pay, Google Pay, Link,
-PayPal, …). It needs an `<Elements>` group created with `mode`/`amount`/`currency`:
+The Express Checkout Element shows one-click wallet buttons (Apple Pay, Google Pay, Link, PayPal, …). It needs an `<Elements>` group created with `mode`/`amount`/`currency`:
 
 ```svelte
 <script>
@@ -353,8 +341,7 @@ PayPal, …). It needs an `<Elements>` group created with `mode`/`amount`/`curre
 
 ### Contact Details (email + Link) — with pre-fill
 
-Collects the customer's email and drives Link autofill. Pre-fill a logged-in customer via
-`defaultValues`:
+Collects the customer's email and drives Link autofill. Pre-fill a logged-in customer via `defaultValues`:
 
 ```svelte
 <script>
@@ -384,28 +371,19 @@ Displays "pay over time" messaging. Its options are required:
 />
 ```
 
-All of these are styled by the Appearance API you pass to `<Elements>` via
-`elementsOptions.appearance`.
+All of these are styled by the Appearance API you pass to `<Elements>` via `elementsOptions.appearance`.
 
 ## Redirect-based methods (Bancontact, iDEAL, giropay, Przelewy24)
 
-These methods redirect the shopper to their bank and return to a `return_url`.
-`sveltekit-stripe`'s share is small: a thin `confirm<Method>Payment` helper (mirroring
-[`confirmCardPayment`](#confirm-helpers)) plus a shared `getRedirectResult` for the return
-page. Intent creation and the webhook stay pure `stripe` on the server.
+These methods redirect the shopper to their bank and return to a `return_url`. `sveltekit-stripe`'s share is small: a thin `confirm<Method>Payment` helper (mirroring [`confirmCardPayment`](#confirm-helpers)) plus a shared `getRedirectResult` for the return page. Intent creation and the webhook stay pure `stripe` on the server.
 
-> The per-method helpers (`confirmIdealPayment`, `confirmBancontactPayment`, `confirmGiropayPayment`,
-> `confirmP24Payment`) and drop-in components (`<StripeIdeal>`, `<StripeBancontact>`, `<StripeGiropay>`,
-> `<StripeP24>`) are **built in** — import them directly.
+> The per-method helpers (`confirmIdealPayment`, `confirmBancontactPayment`, `confirmGiropayPayment`, `confirmP24Payment`) and drop-in components (`<StripeIdeal>`, `<StripeBancontact>`, `<StripeGiropay>`, `<StripeP24>`) are **built in** — import them directly.
 
 ### Example: Bancontact
 
-Bancontact has no Stripe element — only a billing name — so it's the minimal case (a
-rendering method like iDEAL follows the same shape, but with a bank-selector component in
-place of the bare name input).
+Bancontact has no Stripe element — only a billing name — so it's the minimal case (a rendering method like iDEAL follows the same shape, but with a bank-selector component in place of the bare name input).
 
-**Server — create the PaymentIntent** (`src/lib/payment.remote.ts`; Bancontact requires EUR
-and the method type on the intent):
+**Server — create the PaymentIntent** (`src/lib/payment.remote.ts`; Bancontact requires EUR and the method type on the intent):
 
 ```ts
 import Stripe from 'stripe'
@@ -424,8 +402,7 @@ export const createBancontactIntent = command(async ({ amount }: { amount: numbe
 })
 ```
 
-**Checkout page** (`/checkout/+page.svelte`) — `<Elements>` only supplies the `stripe`
-instance; Bancontact renders nothing but a name field:
+**Checkout page** (`/checkout/+page.svelte`) — `<Elements>` only supplies the `stripe` instance; Bancontact renders nothing but a name field:
 
 ```svelte
 <script lang="ts">
@@ -478,15 +455,9 @@ instance; Bancontact renders nothing but a name field:
 </Elements>
 ```
 
-`confirmBancontactPayment` and `getRedirectResult` are **built-in exports** (thin wrappers over the
-Stripe SDK, mirroring `confirmCardPayment`). Each helper takes `{ billingDetails?, returnUrl }`. iDEAL,
-giropay and Przelewy24 follow the identical shape — `confirm{Ideal,Giropay,P24}Payment` +
-`<Stripe{Ideal,Giropay,P24}>` (P24 also collects an `email`; iDEAL accepts an optional `bank`, otherwise
-the shopper picks it on the redirect page). Set `showFields={false}` on any of these components to render
-no input and supply the billing details yourself.
+`confirmBancontactPayment` and `getRedirectResult` are **built-in exports** (thin wrappers over the Stripe SDK, mirroring `confirmCardPayment`). Each helper takes `{ billingDetails?, returnUrl }`. iDEAL, giropay and Przelewy24 follow the identical shape — `confirm{Ideal,Giropay,P24}Payment` + `<Stripe{Ideal,Giropay,P24}>` (P24 also collects an `email`; iDEAL accepts an optional `bank`, otherwise the shopper picks it on the redirect page). Set `showFields={false}` on any of these components to render no input and supply the billing details yourself.
 
-**Webhook** — the source of truth for fulfillment (the redirect can be closed or lost; the
-webhook can't). See [Verifying webhooks](#verifying-webhooks):
+**Webhook** — the source of truth for fulfillment (the redirect can be closed or lost; the webhook can't). See [Verifying webhooks](#verifying-webhooks):
 
 ```ts
 if (event.type === 'payment_intent.succeeded') {
@@ -496,9 +467,7 @@ if (event.type === 'payment_intent.succeeded') {
 
 ## Display / poll methods (BLIK, PromptPay, OXXO)
 
-These don't redirect — after confirm the shopper acts (enters a code, scans a QR, pays at a store), so the
-component **owns the flow**: it confirms, then polls (`pollPaymentIntent`) or displays a voucher, exposing
-a reactive `status` + `oncomplete`/`onerror`. Wire your own submit button to its `pay()` via `bind:this`:
+These don't redirect — after confirm the shopper acts (enters a code, scans a QR, pays at a store), so the component **owns the flow**: it confirms, then polls (`pollPaymentIntent`) or displays a voucher, exposing a reactive `status` + `oncomplete`/`onerror`. Wire your own submit button to its `pay()` via `bind:this`:
 
 ```svelte
 <script lang="ts">
@@ -517,11 +486,9 @@ a reactive `status` + `oncomplete`/`onerror`. Wire your own submit button to its
 
 - **BLIK** — renders a 6-digit code input; `pay()` confirms then polls until paid.
 - **PromptPay** — `pay()` confirms, renders Stripe's QR, polls until paid.
-- **OXXO** — `pay()` confirms, renders the voucher link; payment is offline (a webhook completes it), so
-  `status` ends at `voucher_issued`. Pass `billingName` + `billingEmail` (Stripe requires both).
+- **OXXO** — `pay()` confirms, renders the voucher link; payment is offline (a webhook completes it), so `status` ends at `voucher_issued`. Pass `billingName` + `billingEmail` (Stripe requires both).
 
-The low-level `confirm{Blik,PromptPay,Oxxo}Payment` + `pollPaymentIntent` helpers are exported too, for
-fully custom UIs.
+The low-level `confirm{Blik,PromptPay,Oxxo}Payment` + `pollPaymentIntent` helpers are exported too, for fully custom UIs.
 
 ## Obtaining a Client Secret
 
@@ -695,8 +662,7 @@ export async function POST({ request }) {
 
 ## Checkout Sessions
 
-Stripe Checkout Sessions come in two forms. Create the session on the server, then use the
-matching client piece.
+Stripe Checkout Sessions come in two forms. Create the session on the server, then use the matching client piece.
 
 ### Server
 
@@ -729,8 +695,7 @@ export const load = async () => {
 
 ### Custom Checkout (build with Elements)
 
-Wrap your checkout-mode elements in `<CheckoutProvider>` (session created with
-`ui_mode: 'elements'`), and confirm via `loadCheckoutActions`:
+Wrap your checkout-mode elements in `<CheckoutProvider>` (session created with `ui_mode: 'elements'`), and confirm via `loadCheckoutActions`:
 
 ```svelte
 <script>
@@ -756,15 +721,11 @@ Wrap your checkout-mode elements in `<CheckoutProvider>` (session created with
 </CheckoutProvider>
 ```
 
-Also available in Custom Checkout: `CheckoutBillingAddress`, `CheckoutShippingAddress`,
-`CheckoutContactDetails`, `CheckoutExpressCheckout`. These read the `<CheckoutProvider>`
-context (`getCheckoutContext`) — they are separate from the regular `<Elements>` components
-(`getStripeContext`) and are not interchangeable.
+Also available in Custom Checkout: `CheckoutBillingAddress`, `CheckoutShippingAddress`, `CheckoutContactDetails`, `CheckoutExpressCheckout`. These read the `<CheckoutProvider>` context (`getCheckoutContext`) — they are separate from the regular `<Elements>` components (`getStripeContext`) and are not interchangeable.
 
 ## Payment Links
 
-A [Payment Link](https://docs.stripe.com/payment-links) is a reusable, Stripe-hosted URL.
-Create it on the server and send the customer to it.
+A [Payment Link](https://docs.stripe.com/payment-links) is a reusable, Stripe-hosted URL. Create it on the server and send the customer to it.
 
 ### Server
 
@@ -782,8 +743,7 @@ export const load = async () => {
 
 ### Client
 
-Payment Links are external pages, so redirect with a full-page navigation — not SvelteKit's
-`goto` (which is for internal routes):
+Payment Links are external pages, so redirect with a full-page navigation — not SvelteKit's `goto` (which is for internal routes):
 
 ```svelte
 <script>
@@ -805,9 +765,7 @@ First, install the Stripe Node SDK (peer dependency):
 npm install stripe
 ```
 
-> `sveltekit-stripe/server` is **server-only** (it imports the Node `stripe` SDK). Import it
-> only from `.server.ts` / `+server.ts` / `+page.server.ts` / hooks — never from a client
-> component.
+> `sveltekit-stripe/server` is **server-only** (it imports the Node `stripe` SDK). Import it only from `.server.ts` / `+server.ts` / `+page.server.ts` / hooks — never from a client component.
 
 Create a singleton client, passing your secret key:
 
@@ -865,9 +823,7 @@ export async function POST({ request }) {
 }
 ```
 
-You can also bring your own client — every helper takes a `Stripe` instance, so
-`new Stripe(key)` works instead of `createStripeServer`. And `createStripeServer` returns the
-raw `stripe` client, so anything not wrapped here (customers, refunds, …) is one call away.
+You can also bring your own client — every helper takes a `Stripe` instance, so `new Stripe(key)` works instead of `createStripeServer`. And `createStripeServer` returns the raw `stripe` client, so anything not wrapped here (customers, refunds, …) is one call away.
 
 ## Passing Options
 
